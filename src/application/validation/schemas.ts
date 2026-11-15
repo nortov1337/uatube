@@ -71,6 +71,13 @@ export const commentListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
+export type ListQuery = z.infer<typeof listQuerySchema>;
+
+export function parseListQuery(query: unknown): ListQuery {
+  const result = listQuerySchema.safeParse(query);
+  return result.success ? result.data : listQuerySchema.parse({});
+}
+
 export const playlistSchema = z.object({
   title: z.string().trim().min(1, "Название от 1 до 80 символов").max(80, "Название до 80 символов"),
   description: z.string().trim().max(1000, "Описание до 1000 символов").default(""),
@@ -85,6 +92,10 @@ export const playlistItemSchema = z.object({
 
 export const playlistReorderSchema = z.object({
   videoIds: z.array(z.string().min(1).max(40)).max(500),
+});
+
+export const subscriptionSchema = z.object({
+  handle: z.string().trim().min(1, "Канал не найден").max(40, "Канал не найден"),
 });
 
 export const profileSchema = z.object({

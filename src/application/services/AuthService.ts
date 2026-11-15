@@ -16,11 +16,10 @@ interface AuthServiceDeps {
   tokens: TokenService;
   cookie: SessionCookie;
   handles: HandleFactory;
+  sessionTtlSec: number;
 }
 
 export class AuthService {
-  private readonly sessionTtlSec = Number(process.env.SESSION_TTL_DAYS) * 86400;
-
   constructor(private readonly deps: AuthServiceDeps) {}
 
   async register(input: unknown): Promise<PublicUserDTO> {
@@ -39,7 +38,7 @@ export class AuthService {
       passwordHash,
     });
     const token = await this.deps.tokens.sign({ sub: user.id });
-    await this.deps.cookie.set(token, this.sessionTtlSec);
+    await this.deps.cookie.set(token, this.deps.sessionTtlSec);
     return UserMapper.toPublic(user);
   }
 
@@ -51,7 +50,7 @@ export class AuthService {
       throw new UnauthorizedError("Неверный email или пароль");
     }
     const token = await this.deps.tokens.sign({ sub: user.id });
-    await this.deps.cookie.set(token, this.sessionTtlSec);
+    await this.deps.cookie.set(token, this.deps.sessionTtlSec);
     return UserMapper.toPublic(user);
   }
 

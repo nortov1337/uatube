@@ -8,6 +8,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { errorMessage, requestJson } from "@/lib/api-client";
+import { safeNext } from "@/lib/url";
 
 interface RegisterFormProps {
   next: string;
@@ -33,7 +34,7 @@ export function RegisterForm({ next }: RegisterFormProps) {
         method: "POST",
         body: JSON.stringify({ name, email, password }),
       });
-      router.replace(next || "/");
+      router.replace(safeNext(next));
       router.refresh();
     } catch (registerError) {
       setError(errorMessage(registerError));

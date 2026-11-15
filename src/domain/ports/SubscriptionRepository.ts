@@ -5,6 +5,7 @@ export interface SubscriptionRepository {
   exists(subscriberId: string, channelId: string): Promise<boolean>;
   toggle(subscriberId: string, channelId: string): Promise<boolean>;
   countByChannel(channelId: string): Promise<number>;
+  countByChannels(channelIds: readonly string[]): Promise<Map<string, number>>;
   countBySubscriber(subscriberId: string): Promise<number>;
   listChannels(subscriberId: string): Promise<UserEntity[]>;
   listSubscriberIds(channelId: string): Promise<string[]>;

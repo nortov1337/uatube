@@ -47,7 +47,9 @@ export default async function PlaylistPage({ params }: PlaylistPageProps) {
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
             {playlist.kind === "watch_later" ? t("playlist.watchLater") : t("playlist.title")}
           </p>
-          <h1 className="mt-1 text-xl font-semibold text-neutral-900">{playlist.title}</h1>
+          <h1 className="mt-1 text-xl font-semibold text-neutral-900">
+            {playlist.kind === "watch_later" ? t("playlist.watchLater") : playlist.title}
+          </h1>
           <p className="mt-1 text-sm text-neutral-600">
             <Link href={`/channel/${playlist.owner.handle}`} className="hover:underline">
               {playlist.owner.name}

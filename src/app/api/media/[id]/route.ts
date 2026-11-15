@@ -1,4 +1,5 @@
 import { container } from "@/lib/container";
+import { currentUserId } from "@/lib/http/currentUserId";
 import { withApi } from "@/lib/http/withApi";
 
 type Context = { params: Promise<{ id: string }> };
@@ -8,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 export const GET = withApi<Context>(async (req, ctx) => {
   const { id } = await ctx.params;
-  const media = await container.media.openVideo(id, req.headers.get("range"));
+  const viewerId = await currentUserId();
+  const media = await container.media.openVideo(id, req.headers.get("range"), viewerId);
   const length = media.end - media.start + 1;
 
   return new Response(media.stream, {

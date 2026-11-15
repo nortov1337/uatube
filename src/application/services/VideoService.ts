@@ -9,6 +9,7 @@ import { listQuerySchema } from "@/application/validation/schemas";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import type { LikeRepository } from "@/domain/ports/LikeRepository";
 import type { VideoRepository } from "@/domain/ports/VideoRepository";
+import { canViewVideo } from "@/domain/values/VideoVisibility";
 
 interface VideoServiceDeps {
   videos: VideoRepository;
@@ -40,8 +41,7 @@ export class VideoService {
 
   async getDetails(id: string, viewerId: string | null): Promise<VideoDetailsDTO> {
     const video = await this.deps.videos.findById(id);
-    if (!video) throw new NotFoundError("Видео не найдено");
-    if (video.visibility === "private" && video.authorId !== viewerId) {
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
       throw new NotFoundError("Видео не найдено");
     }
     const likedByMe = viewerId ? await this.deps.likes.find(viewerId, video.id) : false;
@@ -50,13 +50,17 @@ export class VideoService {
 
   async listRelated(id: string, viewerId: string | null, limit: number): Promise<VideoCardDTO[]> {
     const video = await this.deps.videos.findById(id);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
     return this.deps.recommendations.related(video, viewerId, limit);
   }
 
-  async registerView(id: string): Promise<{ views: number }> {
+  async registerView(id: string, viewerId: string | null): Promise<{ views: number }> {
     const video = await this.deps.videos.findById(id);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
     const views = await this.deps.videos.recordView(video.id);
     return { views };
   }

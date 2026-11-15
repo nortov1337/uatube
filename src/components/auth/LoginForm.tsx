@@ -8,6 +8,7 @@ import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { errorMessage, requestJson } from "@/lib/api-client";
+import { safeNext } from "@/lib/url";
 
 interface LoginFormProps {
   next: string;
@@ -32,7 +33,7 @@ export function LoginForm({ next }: LoginFormProps) {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      router.replace(next || "/");
+      router.replace(safeNext(next));
       router.refresh();
     } catch (loginError) {
       setError(errorMessage(loginError));

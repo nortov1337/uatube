@@ -35,7 +35,19 @@ import { LocalThumbStorage } from "@/infrastructure/storage/LocalThumbStorage";
 import { LocalVideoStorage } from "@/infrastructure/storage/LocalVideoStorage";
 
 const secret = process.env.AUTH_SECRET;
-if (!secret) throw new Error("AUTH_SECRET не задан");
+if (!secret || secret.length < 32) {
+  throw new Error("AUTH_SECRET должен содержать не меньше 32 символов");
+}
+
+function envNumber(name: string): number {
+  const value = Number(process.env[name]);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${name} не задан или некорректен`);
+  }
+  return value;
+}
+
+const sessionTtlDays = envNumber("SESSION_TTL_DAYS");
 
 const users = new PrismaUserRepository(prisma);
 const videos = new PrismaVideoRepository(prisma);
@@ -53,7 +65,7 @@ const thumbs = new LocalThumbStorage(paths);
 const images = new LocalImageStorage(paths);
 const hasher = new BcryptPasswordHasher();
 const uploadPolicy = new UploadPolicy({
-  maxBytes: Number(process.env.MAX_UPLOAD_MB) * 1024 * 1024,
+  maxBytes: envNumber("MAX_UPLOAD_MB") * 1024 * 1024,
 });
 const imagePolicy = new ImagePolicy();
 
@@ -62,10 +74,11 @@ const auth = new AuthService({
   hasher,
   tokens: new JoseTokenService({
     secret,
-    ttlDays: Number(process.env.SESSION_TTL_DAYS),
+    ttlDays: sessionTtlDays,
   }),
   cookie: new CookieSessionStore(),
   handles: new HandleFactory({ users }),
+  sessionTtlSec: sessionTtlDays * 86400,
 });
 
 const recommendations = new RecommendationService({ videos, subscriptions, history });

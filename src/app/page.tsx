@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { parseListQuery } from "@/application/validation/schemas";
 import { CategoryChips } from "@/components/video/CategoryChips";
 import { ContinueWatching } from "@/components/video/ContinueWatching";
 import { SortTabs } from "@/components/video/SortTabs";
@@ -25,24 +26,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const { q, tag, category, sort, cursor } = await searchParams;
   const { locale, t } = await getI18n();
   const viewerId = await currentUserId();
-  const activeSort = sort ?? "new";
-  const hasFilters = Boolean(q || tag || category) || activeSort !== "new";
+  const query = parseListQuery({ q, tag, category, sort, cursor });
+  const hasFilters =
+    Boolean(query.q || query.tag || query.category) || query.sort !== "new";
 
   const [feed, continueWatching] = await Promise.all([
     hasFilters
-      ? container.videos.listFeed({ q, tag, category, sort: activeSort, cursor, limit: 24 })
+      ? container.videos.listFeed(query)
       : container.videos.homeFeed(viewerId, 24).then((items) => ({ items, nextCursor: null })),
     viewerId && !hasFilters
       ? container.history.continueWatching(viewerId, 8)
       : Promise.resolve([]),
   ]);
 
-  const title = q
-    ? t("home.resultsFor", { query: q })
-    : tag
-      ? t("home.tagResults", { tag })
-      : category
-        ? categoryLabel(category, locale)
+  const title = query.q
+    ? t("home.resultsFor", { query: query.q })
+    : query.tag
+      ? t("home.tagResults", { tag: query.tag })
+      : query.category
+        ? categoryLabel(query.category, locale)
         : viewerId
           ? t("home.recommended")
           : t("home.home");
@@ -54,25 +56,35 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-lg font-semibold text-neutral-900">{title}</h1>
-          <SortTabs active={activeSort} q={q} tag={tag} category={category} />
+          <SortTabs
+            active={query.sort}
+            q={query.q}
+            tag={query.tag}
+            category={query.category}
+          />
         </div>
-        <CategoryChips active={category} q={q} tag={tag} />
+        <CategoryChips
+          active={query.category}
+          q={query.q}
+          tag={query.tag}
+          sort={query.sort}
+        />
       </div>
 
       <VideoGrid
         videos={feed.items}
-        emptyTitle={q || tag ? t("home.nothingFound") : undefined}
-        emptyDescription={q || tag ? t("home.tryAnother") : undefined}
+        emptyTitle={query.q || query.tag ? t("home.nothingFound") : undefined}
+        emptyDescription={query.q || query.tag ? t("home.tryAnother") : undefined}
       />
 
       {feed.nextCursor ? (
         <div className="mt-8 flex justify-center">
           <Link
             href={withParams("/", {
-              q,
-              tag,
-              category,
-              sort: activeSort === "new" ? undefined : activeSort,
+              q: query.q,
+              tag: query.tag,
+              category: query.category,
+              sort: query.sort === "new" ? undefined : query.sort,
               cursor: feed.nextCursor,
             })}
             className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-5 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200"

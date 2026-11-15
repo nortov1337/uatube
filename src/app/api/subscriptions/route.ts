@@ -5,7 +5,6 @@ import { withApi } from "@/lib/http/withApi";
 
 export const POST = withApi(async (req) => {
   const userId = await requireUserId();
-  const body = (await req.json()) as { handle?: string };
-  const result = await container.subscriptions.toggle(String(body.handle ?? ""), userId);
+  const result = await container.subscriptions.toggle(await req.json(), userId);
   return JsonResponder.ok(result);
 });

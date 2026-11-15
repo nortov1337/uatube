@@ -14,3 +14,10 @@ export function withParams(
 export function loginPath(next: string): string {
   return withParams("/login", { next });
 }
+
+export function safeNext(value: string | undefined | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) {
+    return "/";
+  }
+  return value;
+}

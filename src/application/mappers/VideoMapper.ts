@@ -24,7 +24,6 @@ export class VideoMapper {
       ...VideoMapper.toCard(video),
       description: video.description,
       mimeType: video.mimeType,
-      sizeBytes: video.sizeBytes,
       likedByMe,
       visibility: video.visibility,
       commentsCount: video.commentsCount,

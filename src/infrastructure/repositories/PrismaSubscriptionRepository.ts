@@ -38,6 +38,16 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
     return this.prisma.subscription.count({ where: { channelId } });
   }
 
+  async countByChannels(channelIds: readonly string[]): Promise<Map<string, number>> {
+    if (channelIds.length === 0) return new Map();
+    const rows = await this.prisma.subscription.groupBy({
+      by: ["channelId"],
+      where: { channelId: { in: [...channelIds] } },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((row) => [row.channelId, row._count._all]));
+  }
+
   async countBySubscriber(subscriberId: string): Promise<number> {
     return this.prisma.subscription.count({ where: { subscriberId } });
   }

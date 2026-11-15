@@ -4,6 +4,7 @@ import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { Header } from "@/components/layout/Header";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { container } from "@/lib/container";
 import { getI18n } from "@/lib/i18n/server";
 import { getPreferences } from "@/lib/preferences-server";
 import "./globals.css";
@@ -19,14 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale } = await getI18n();
   const { theme } = await getPreferences();
+  const user = await container.auth.currentUser();
 
   return (
     <html lang={locale} data-theme={theme}>
       <body className="min-h-screen bg-surface text-neutral-900">
         <I18nProvider locale={locale}>
-          <Header />
+          <Header user={user} />
           <div className="mx-auto flex w-full max-w-[1600px] gap-6 px-4 sm:px-6">
-            <Sidebar />
+            <Sidebar user={user} />
             <main className="min-w-0 flex-1 pb-16 pt-6">
               <MobileNav />
               {children}

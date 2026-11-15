@@ -6,12 +6,13 @@ const SORTS = ["new", "views", "likes"] as const;
 
 interface SortTabsProps {
   active: string;
+  basePath?: string;
   q?: string;
   tag?: string;
   category?: string;
 }
 
-export async function SortTabs({ active, q, tag, category }: SortTabsProps) {
+export async function SortTabs({ active, basePath = "/", q, tag, category }: SortTabsProps) {
   const { t } = await getI18n();
   const labels = { new: t("sort.new"), views: t("sort.views"), likes: t("sort.likes") };
 
@@ -20,7 +21,7 @@ export async function SortTabs({ active, q, tag, category }: SortTabsProps) {
       {SORTS.map((sort) => (
         <Link
           key={sort}
-          href={withParams("/", { q, tag, category, sort })}
+          href={withParams(basePath, { q, tag, category, sort })}
           className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-medium transition-all duration-200 ${
             active === sort
               ? "bg-surface text-neutral-900 shadow-sm"

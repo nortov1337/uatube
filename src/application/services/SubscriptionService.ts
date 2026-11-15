@@ -4,7 +4,7 @@ import type { VideoCardDTO } from "@/application/dto/VideoCardDTO";
 import { UserMapper } from "@/application/mappers/UserMapper";
 import { VideoMapper } from "@/application/mappers/VideoMapper";
 import { parseOrThrow } from "@/application/validation/parse";
-import { listQuerySchema } from "@/application/validation/schemas";
+import { listQuerySchema, subscriptionSchema } from "@/application/validation/schemas";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import { ValidationError } from "@/domain/errors/ValidationError";
 import type { SubscriptionRepository } from "@/domain/ports/SubscriptionRepository";
@@ -19,9 +19,10 @@ export class SubscriptionService {
   constructor(private readonly deps: SubscriptionServiceDeps) {}
 
   async toggle(
-    handle: string,
+    input: unknown,
     subscriberId: string,
   ): Promise<{ subscribed: boolean; subscribers: number }> {
+    const { handle } = parseOrThrow(subscriptionSchema, input);
     const channel = await this.deps.users.findByHandle(handle);
     if (!channel) throw new NotFoundError("Канал не найден");
     if (channel.id === subscriberId) {
@@ -35,12 +36,13 @@ export class SubscriptionService {
 
   async list(subscriberId: string): Promise<ChannelSummaryDTO[]> {
     const channels = await this.deps.subscriptions.listChannels(subscriberId);
-    return Promise.all(
-      channels.map(async (channel) => ({
-        ...UserMapper.toPublic(channel),
-        subscribers: await this.deps.subscriptions.countByChannel(channel.id),
-      })),
+    const counts = await this.deps.subscriptions.countByChannels(
+      channels.map((channel) => channel.id),
     );
+    return channels.map((channel) => ({
+      ...UserMapper.toPublic(channel),
+      subscribers: counts.get(channel.id) ?? 0,
+    }));
   }
 
   async feed(subscriberId: string, query: unknown): Promise<Page<VideoCardDTO>> {

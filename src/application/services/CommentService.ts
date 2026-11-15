@@ -15,6 +15,7 @@ import type { CommentLikeRepository } from "@/domain/ports/CommentLikeRepository
 import type { CommentRepository } from "@/domain/ports/CommentRepository";
 import type { NotificationRepository } from "@/domain/ports/NotificationRepository";
 import type { VideoRepository } from "@/domain/ports/VideoRepository";
+import { canViewVideo } from "@/domain/values/VideoVisibility";
 
 interface CommentServiceDeps {
   comments: CommentRepository;
@@ -28,7 +29,9 @@ export class CommentService {
 
   async list(videoId: string, query: unknown, viewerId: string | null): Promise<Page<CommentDTO>> {
     const video = await this.deps.videos.findById(videoId);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
 
     const parsed = parseOrThrow(commentListQuerySchema, query);
     const offset = offsetFromCursor(parsed.cursor);
@@ -50,6 +53,11 @@ export class CommentService {
     const comment = await this.deps.comments.findById(commentId);
     if (!comment) throw new NotFoundError("Комментарий не найден");
 
+    const video = await this.deps.videos.findById(comment.videoId);
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
+      throw new NotFoundError("Комментарий не найден");
+    }
+
     const parsed = parseOrThrow(commentListQuerySchema, query);
     const offset = offsetFromCursor(parsed.cursor);
     const page = await this.deps.comments.listReplies({
@@ -67,7 +75,9 @@ export class CommentService {
 
   async create(videoId: string, userId: string, input: unknown): Promise<CommentDTO> {
     const video = await this.deps.videos.findById(videoId);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, userId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
 
     const data = parseOrThrow(commentSchema, input);
     const parent = data.parentId ? await this.deps.comments.findById(data.parentId) : null;

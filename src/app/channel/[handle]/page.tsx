@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ChannelPageData } from "@/application/services/ChannelService";
 import type { PlaylistDTO } from "@/application/dto/PlaylistDTO";
+import { parseListQuery } from "@/application/validation/schemas";
 import { PlaylistCard } from "@/components/playlist/PlaylistCard";
 import { Avatar } from "@/components/ui/Avatar";
 import { VideoGrid } from "@/components/video/VideoGrid";
@@ -41,7 +42,7 @@ export default async function ChannelPage({ params, searchParams }: ChannelPageP
   const viewerId = await currentUserId();
   const { locale, t } = await getI18n();
   const activeTab = tab ?? "videos";
-  const activeSort = sort ?? "new";
+  const activeSort = parseListQuery({ sort }).sort;
   const { channel, videos, playlists } = await loadChannel(handle, viewerId, activeSort);
 
   const tabs = [
@@ -112,7 +113,8 @@ export default async function ChannelPage({ params, searchParams }: ChannelPageP
               key={item.value}
               href={withParams(`/channel/${channel.handle}`, {
                 tab: item.value === "videos" ? undefined : item.value,
-                sort: item.value === "videos" ? sort : undefined,
+                sort:
+                  item.value === "videos" && activeSort !== "new" ? activeSort : undefined,
               })}
               className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === item.value
@@ -128,6 +130,7 @@ export default async function ChannelPage({ params, searchParams }: ChannelPageP
           <div className="pb-2">
             <SortTabs
               active={activeSort}
+              basePath={`/channel/${channel.handle}`}
               q={undefined}
               tag={undefined}
               category={undefined}

@@ -93,18 +93,22 @@ export class ProfileService {
     const user = await this.deps.users.findById(userId);
     if (!user) throw new NotFoundError("Пользователь не найден");
 
-    const videos = await this.deps.videos.listFeed({
-      authorId: user.id,
-      visibility: ["public", "unlisted", "private"],
-      offset: 0,
-      limit: 1000,
-    });
-    await Promise.all(
-      videos.items.map(async (video) => {
-        await this.deps.storage.remove(video.fileName);
-        if (video.thumbName) await this.deps.thumbs.remove(video.thumbName);
-      }),
-    );
+    const limit = 200;
+    for (let offset = 0; ; offset += limit) {
+      const page = await this.deps.videos.listFeed({
+        authorId: user.id,
+        visibility: ["public", "unlisted", "private"],
+        offset,
+        limit,
+      });
+      await Promise.all(
+        page.items.map(async (video) => {
+          await this.deps.storage.remove(video.fileName);
+          if (video.thumbName) await this.deps.thumbs.remove(video.thumbName);
+        }),
+      );
+      if (!page.hasMore) break;
+    }
     if (user.avatarName) await this.deps.images.remove(user.avatarName);
     if (user.bannerName) await this.deps.images.remove(user.bannerName);
     await this.deps.users.remove(user.id);

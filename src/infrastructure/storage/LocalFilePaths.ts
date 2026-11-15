@@ -1,6 +1,6 @@
 import { join, resolve, sep } from "node:path";
 
-const NAME_PATTERN = /^[a-zA-Z0-9-]+\.(mp4|webm|jpg)$/;
+const NAME_PATTERN = /^[a-zA-Z0-9_-]+\.(mp4|webm|jpg)$/;
 
 function resolveRoot(): string {
   const dir = process.env.UPLOAD_DIR;

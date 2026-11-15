@@ -13,6 +13,7 @@ import { ForbiddenError } from "@/domain/errors/ForbiddenError";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import type { PlaylistRepository } from "@/domain/ports/PlaylistRepository";
 import type { VideoRepository } from "@/domain/ports/VideoRepository";
+import { canViewVideo } from "@/domain/values/VideoVisibility";
 
 const WATCH_LATER_TITLE = "Смотреть позже";
 
@@ -50,7 +51,10 @@ export class PlaylistService {
   }
 
   async update(playlistId: string, userId: string, input: unknown): Promise<PlaylistDTO> {
-    await this.requireOwner(playlistId, userId);
+    const playlist = await this.requireOwner(playlistId, userId);
+    if (playlist.kind === "watch_later") {
+      throw new ForbiddenError("Системный плейлист нельзя изменить");
+    }
     const data = parseOrThrow(playlistUpdateSchema, input);
     await this.deps.playlists.update(playlistId, data);
     const updated = await this.deps.playlists.findById(playlistId);
@@ -70,10 +74,14 @@ export class PlaylistService {
     if (playlist.visibility === "private" && playlist.ownerId !== viewerId) {
       throw new NotFoundError("Плейлист не найден");
     }
-    const items = await this.deps.playlists.listItems(playlist.id);
+    const items = (await this.deps.playlists.listItems(playlist.id)).filter((item) =>
+      canViewVideo(item.video.visibility, item.video.authorId, viewerId),
+    );
+    const cards = items.map((item) => VideoMapper.toCard(item.video));
     return {
       ...PlaylistService.toDTO(playlist),
-      items: items.map((item) => VideoMapper.toCard(item.video)),
+      coverUrl: cards[0]?.thumbUrl ?? null,
+      items: cards,
       isOwner: playlist.ownerId === viewerId,
     };
   }
@@ -82,7 +90,9 @@ export class PlaylistService {
     const playlist = await this.requireOwner(playlistId, userId);
     const { videoId } = parseOrThrow(playlistItemSchema, input);
     const video = await this.deps.videos.findById(videoId);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, userId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
     await this.deps.playlists.addItem(playlist.id, video.id);
     return { added: true };
   }
@@ -98,9 +108,12 @@ export class PlaylistService {
     await this.deps.playlists.reorder(playlist.id, videoIds);
   }
 
-  async toggleWatchLater(userId: string, videoId: string): Promise<{ saved: boolean }> {
+  async toggleWatchLater(userId: string, input: unknown): Promise<{ saved: boolean }> {
+    const { videoId } = parseOrThrow(playlistItemSchema, input);
     const video = await this.deps.videos.findById(videoId);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, userId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
 
     const playlist =
       (await this.deps.playlists.findWatchLater(userId)) ??

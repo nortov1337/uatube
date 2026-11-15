@@ -136,9 +136,9 @@ export class StudioService {
 
   async remove(videoId: string, userId: string): Promise<void> {
     const video = await this.requireOwned(videoId, userId);
+    await this.deps.videos.remove(video.id);
     await this.deps.storage.remove(video.fileName);
     if (video.thumbName) await this.deps.thumbs.remove(video.thumbName);
-    await this.deps.videos.remove(video.id);
   }
 
   async get(videoId: string, userId: string): Promise<StudioVideoDTO> {
@@ -176,6 +176,7 @@ export class StudioService {
   }
 
   private async notifySubscribers(video: VideoWithAuthor): Promise<void> {
+    if (video.visibility === "private") return;
     const subscriberIds = await this.deps.subscriptions.listSubscriberIds(video.authorId);
     await this.deps.notifications.createMany(
       subscriberIds.map((userId) => ({

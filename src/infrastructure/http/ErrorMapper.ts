@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { AppError } from "@/domain/errors/AppError";
 import { RateLimitError } from "@/domain/errors/RateLimitError";
@@ -34,6 +35,15 @@ export class ErrorMapper {
           code: "VALIDATION",
         },
       };
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return { status: 409, body: { error: "Такая запись уже существует", code: "CONFLICT" } };
+      }
+      if (error.code === "P2025") {
+        return { status: 404, body: { error: "Запись не найдена", code: "NOT_FOUND" } };
+      }
     }
 
     console.error(error);

@@ -1,12 +1,16 @@
 import Link from "next/link";
+import type { PublicUserDTO } from "@/application/dto/PublicUserDTO";
 import { SidebarNav, type NavItem } from "@/components/layout/SidebarNav";
 import { Avatar } from "@/components/ui/Avatar";
 import { container } from "@/lib/container";
 import { getI18n } from "@/lib/i18n/server";
 
-export async function Sidebar() {
+interface SidebarProps {
+  user: PublicUserDTO | null;
+}
+
+export async function Sidebar({ user }: SidebarProps) {
   const { t } = await getI18n();
-  const user = await container.auth.currentUser();
   const channels = user ? await container.subscriptions.list(user.id) : [];
 
   const items: NavItem[] = [

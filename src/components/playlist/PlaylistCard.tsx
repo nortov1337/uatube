@@ -39,7 +39,7 @@ export async function PlaylistCard({ playlist }: PlaylistCardProps) {
       </div>
       <div className="px-1 pb-1">
         <p className="line-clamp-1 text-sm font-semibold text-neutral-900 transition-colors group-hover:text-red-600">
-          {playlist.title}
+          {playlist.kind === "watch_later" ? t("playlist.watchLater") : playlist.title}
         </p>
         <p className="text-xs text-neutral-500">{visibility}</p>
       </div>

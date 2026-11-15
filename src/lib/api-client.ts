@@ -18,9 +18,10 @@ export function errorMessage(error: unknown): string {
 export async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
     ...init,
-    headers: init?.body
-      ? { "Content-Type": "application/json", ...init.headers }
-      : init?.headers,
+    headers:
+      typeof init?.body === "string"
+        ? { "Content-Type": "application/json", ...init.headers }
+        : init?.headers,
   });
   return parseResponse<T>(response);
 }

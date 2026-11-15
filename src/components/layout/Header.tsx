@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Bell, Upload } from "lucide-react";
+import type { PublicUserDTO } from "@/application/dto/PublicUserDTO";
 import { Logo } from "@/components/layout/Logo";
 import { PreferencesMenu } from "@/components/layout/PreferencesMenu";
 import { SearchBar } from "@/components/layout/SearchBar";
@@ -10,10 +11,13 @@ import { getI18n } from "@/lib/i18n/server";
 import { getPreferences } from "@/lib/preferences-server";
 import { loginPath } from "@/lib/url";
 
-export async function Header() {
+interface HeaderProps {
+  user: PublicUserDTO | null;
+}
+
+export async function Header({ user }: HeaderProps) {
   const { t } = await getI18n();
   const { theme } = await getPreferences();
-  const user = await container.auth.currentUser();
   const unread = user ? await container.notifications.unread(user.id) : 0;
 
   return (

@@ -4,6 +4,7 @@ import type { ThumbStorage } from "@/domain/ports/ThumbStorage";
 import type { UserRepository } from "@/domain/ports/UserRepository";
 import type { VideoRepository } from "@/domain/ports/VideoRepository";
 import type { VideoStorage } from "@/domain/ports/VideoStorage";
+import { canViewVideo } from "@/domain/values/VideoVisibility";
 import { parseRange } from "@/infrastructure/http/RangeParser";
 
 interface MediaStreamServiceDeps {
@@ -26,9 +27,15 @@ export interface VideoStream {
 export class MediaStreamService {
   constructor(private readonly deps: MediaStreamServiceDeps) {}
 
-  async openVideo(id: string, rangeHeader: string | null): Promise<VideoStream> {
+  async openVideo(
+    id: string,
+    rangeHeader: string | null,
+    viewerId: string | null,
+  ): Promise<VideoStream> {
     const video = await this.deps.videos.findById(id);
-    if (!video) throw new NotFoundError("Видео не найдено");
+    if (!video || !canViewVideo(video.visibility, video.authorId, viewerId)) {
+      throw new NotFoundError("Видео не найдено");
+    }
 
     const size = await this.deps.storage.size(video.fileName);
     if (size === null) throw new NotFoundError("Файл видео не найден");
@@ -52,9 +59,10 @@ export class MediaStreamService {
     };
   }
 
-  async openThumb(id: string): Promise<{ data: Uint8Array } | null> {
+  async openThumb(id: string, viewerId: string | null): Promise<{ data: Uint8Array } | null> {
     const video = await this.deps.videos.findById(id);
     if (!video || !video.thumbName) return null;
+    if (!canViewVideo(video.visibility, video.authorId, viewerId)) return null;
     const data = await this.deps.thumbs.read(video.thumbName);
     return data ? { data } : null;
   }

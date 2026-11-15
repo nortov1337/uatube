@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AnalyticsBars } from "@/components/studio/AnalyticsBars";
 import { EditVideoForm } from "@/components/studio/EditVideoForm";
+import { ForbiddenError } from "@/domain/errors/ForbiddenError";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
@@ -22,7 +23,7 @@ export default async function StudioVideoPage({ params }: StudioVideoPageProps) 
   const { t } = await getI18n();
   const [video, analytics] = await Promise.all([
     container.studio.get(id, userId).catch((error: unknown) => {
-      if (error instanceof NotFoundError) notFound();
+      if (error instanceof NotFoundError || error instanceof ForbiddenError) notFound();
       throw error;
     }),
     container.studio.analytics(id, userId, 30),

@@ -5,7 +5,6 @@ import { withApi } from "@/lib/http/withApi";
 
 export const POST = withApi(async (req) => {
   const userId = await requireUserId();
-  const body = (await req.json()) as { videoId?: string };
-  const result = await container.playlists.toggleWatchLater(userId, String(body.videoId ?? ""));
+  const result = await container.playlists.toggleWatchLater(userId, await req.json());
   return JsonResponder.ok(result);
 });

@@ -11,7 +11,12 @@ import { PrismaVideoMapper } from "@/infrastructure/repositories/mappers/PrismaV
 const OWNER_INCLUDE = {
   owner: true,
   _count: { select: { items: true } },
-  items: { orderBy: { position: "asc" }, take: 1, select: { videoId: true } },
+  items: {
+    where: { video: { visibility: { not: "private" } } },
+    orderBy: { position: "asc" },
+    take: 1,
+    select: { videoId: true },
+  },
 } as const;
 
 const ITEM_INCLUDE = {
