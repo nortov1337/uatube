@@ -6,7 +6,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Thumb } from "@/components/ui/Thumb";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
-import { formatViews, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +16,13 @@ export default async function HistoryPage() {
   const userId = await currentUserId();
   if (!userId) redirect("/login?next=/history");
 
+  const { locale, t } = await getI18n();
   const page = await container.history.list(userId, { limit: 50 });
 
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-neutral-900">История просмотров</h1>
+        <h1 className="text-xl font-semibold text-neutral-900">{t("history.title")}</h1>
         {page.items.length > 0 ? <HistoryActions clearAll /> : null}
       </div>
 
@@ -27,14 +30,14 @@ export default async function HistoryPage() {
         <div className="mt-6">
           <EmptyState
             icon={<History className="h-10 w-10" />}
-            title="История пуста"
-            description="Здесь появятся видео, которые вы смотрели."
+            title={t("history.empty")}
+            description={t("history.emptyDesc")}
             action={
               <Link
                 href="/"
-                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
               >
-                Смотреть видео
+                {t("history.watch")}
               </Link>
             }
           />
@@ -47,7 +50,7 @@ export default async function HistoryPage() {
             return (
               <div
                 key={item.video.id}
-                className="flex items-center gap-3 rounded-xl p-2 hover:bg-neutral-50"
+                className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-neutral-50"
               >
                 <div className="w-32 shrink-0 sm:w-40">
                   <Thumb
@@ -59,13 +62,13 @@ export default async function HistoryPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/watch/${item.video.id}`}
-                    className="line-clamp-2 text-sm font-semibold text-neutral-900 hover:text-red-600"
+                    className="line-clamp-2 text-sm font-semibold text-neutral-900 transition-colors hover:text-red-600"
                   >
                     {item.video.title}
                   </Link>
                   <p className="truncate text-xs text-neutral-600">{item.video.author.name}</p>
                   <p className="text-xs text-neutral-500">
-                    {formatViews(item.video.views)} просмотров · {timeAgo(item.watchedAt)}
+                    {countOf("views", item.video.views, locale)} · {timeAgo(item.watchedAt, locale)}
                   </p>
                   {percent > 0 ? (
                     <div className="mt-1 h-1 w-full max-w-xs rounded-full bg-neutral-200">

@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { errorMessage, requestJson } from "@/lib/api-client";
 
 export function PasswordSettingsForm() {
+  const { t } = useI18n();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [pending, setPending] = useState(false);
@@ -24,7 +26,7 @@ export function PasswordSettingsForm() {
       });
       setCurrentPassword("");
       setNewPassword("");
-      setNotice("Пароль изменён");
+      setNotice(t("settings.passwordChanged"));
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -35,7 +37,7 @@ export function PasswordSettingsForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Текущий пароль</span>
+        <span className="text-sm font-medium text-neutral-900">{t("settings.currentPassword")}</span>
         <Input
           type="password"
           value={currentPassword}
@@ -44,7 +46,7 @@ export function PasswordSettingsForm() {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Новый пароль</span>
+        <span className="text-sm font-medium text-neutral-900">{t("settings.newPassword")}</span>
         <Input
           type="password"
           value={newPassword}
@@ -57,7 +59,7 @@ export function PasswordSettingsForm() {
       {notice ? <p className="text-sm text-emerald-600">{notice}</p> : null}
       <div>
         <Button type="submit" disabled={pending || !currentPassword || newPassword.length < 8}>
-          {pending ? "Меняем…" : "Сменить пароль"}
+          {pending ? t("settings.changing") : t("settings.changePassword")}
         </Button>
       </div>
     </form>

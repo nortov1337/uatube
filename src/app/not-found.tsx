@@ -1,20 +1,23 @@
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getI18n } from "@/lib/i18n/server";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { t } = await getI18n();
+
   return (
     <div className="mx-auto w-full max-w-lg py-10">
       <EmptyState
         icon={<SearchX className="h-10 w-10" />}
-        title="Страница не найдена"
-        description="Возможно, видео удалено или ссылка неверна."
+        title={t("notFound.title")}
+        description={t("notFound.desc")}
         action={
           <Link
             href="/"
-            className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+            className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
           >
-            На главную
+            {t("notFound.home")}
           </Link>
         }
       />

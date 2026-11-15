@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { errorMessage } from "@/lib/api-client";
@@ -15,11 +16,12 @@ interface CommentFormProps {
 
 export function CommentForm({
   onSubmit,
-  placeholder = "Оставьте комментарий",
-  submitLabel = "Отправить",
+  placeholder,
+  submitLabel,
   compact = false,
   onCancel,
 }: CommentFormProps) {
+  const { t } = useI18n();
   const [body, setBody] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function CommentForm({
       <Textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("comments.leave")}
         rows={compact ? 2 : 3}
         maxLength={1000}
         disabled={pending}
@@ -55,11 +57,11 @@ export function CommentForm({
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
       <div className="flex items-center gap-2">
         <Button type="submit" size="sm" disabled={pending || body.trim().length === 0}>
-          {pending ? "Отправляем…" : submitLabel}
+          {pending ? t("comments.sending") : (submitLabel ?? t("comments.send"))}
         </Button>
         {onCancel ? (
           <Button variant="ghost" size="sm" onClick={onCancel} disabled={pending}>
-            Отмена
+            {t("comments.cancel")}
           </Button>
         ) : null}
       </div>

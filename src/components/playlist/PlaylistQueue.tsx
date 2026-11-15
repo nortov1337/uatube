@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { VideoCardDTO } from "@/application/dto/VideoCardDTO";
 import { Thumb } from "@/components/ui/Thumb";
 import { formatDuration } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 interface PlaylistQueueProps {
   playlistId: string;
@@ -10,20 +12,24 @@ interface PlaylistQueueProps {
   activeId: string;
 }
 
-export function PlaylistQueue({ playlistId, title, items, activeId }: PlaylistQueueProps) {
+export async function PlaylistQueue({ playlistId, title, items, activeId }: PlaylistQueueProps) {
+  const { locale, t } = await getI18n();
+
   return (
-    <div className="rounded-2xl border border-neutral-200">
+    <div className="overflow-hidden rounded-2xl border border-neutral-200">
       <div className="border-b border-neutral-200 px-3 py-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Очередь</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          {t("playlist.queue")}
+        </p>
         <p className="line-clamp-1 text-sm font-semibold text-neutral-900">{title}</p>
-        <p className="text-xs text-neutral-500">{items.length} видео</p>
+        <p className="text-xs text-neutral-500">{countOf("videos", items.length, locale)}</p>
       </div>
       <div className="max-h-[420px] overflow-y-auto p-1">
         {items.map((video, index) => (
           <Link
             key={video.id}
             href={`/watch/${video.id}?list=${playlistId}`}
-            className={`flex items-center gap-2 rounded-lg p-1.5 ${
+            className={`flex items-center gap-2 rounded-lg p-1.5 transition-colors ${
               video.id === activeId ? "bg-neutral-100" : "hover:bg-neutral-50"
             }`}
           >

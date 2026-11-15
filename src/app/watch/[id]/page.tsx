@@ -18,6 +18,8 @@ import { WatchLaterButton } from "@/components/video/WatchLaterButton";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +48,7 @@ async function loadPlaylist(
 export default async function WatchPage({ params, searchParams }: WatchPageProps) {
   const { id } = await params;
   const { list } = await searchParams;
+  const { locale, t } = await getI18n();
   const viewerId = await currentUserId();
   const video = await loadVideo(id, viewerId);
 
@@ -100,7 +103,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
           <Link href={`/channel/${video.author.handle}`} className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-neutral-900">{video.author.name}</p>
             <p className="truncate text-xs text-neutral-600">
-              @{video.author.handle} · {channel.stats.subscribers} подписчиков
+              @{video.author.handle} · {countOf("subscribers", channel.stats.subscribers, locale)}
             </p>
           </Link>
           <SubscribeButton
@@ -136,7 +139,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
           />
         ) : null}
         <div>
-          <h2 className="mb-3 text-sm font-semibold text-neutral-900">Похожие видео</h2>
+          <h2 className="mb-3 text-sm font-semibold text-neutral-900">{t("watch.related")}</h2>
           <RelatedList videos={related} />
         </div>
       </aside>

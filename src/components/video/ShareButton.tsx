@@ -2,6 +2,7 @@
 
 import { Check, Download, Share2 } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 interface ShareButtonProps {
   videoId: string;
@@ -9,6 +10,7 @@ interface ShareButtonProps {
 }
 
 export function ShareButton({ videoId, title }: ShareButtonProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const share = async () => {
@@ -27,20 +29,21 @@ export function ShareButton({ videoId, title }: ShareButtonProps) {
       <button
         type="button"
         onClick={share}
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
+        className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 transition-all hover:bg-neutral-200 active:scale-95"
       >
         {copied ? (
           <Check aria-hidden="true" className="h-4 w-4" />
         ) : (
           <Share2 aria-hidden="true" className="h-4 w-4" />
         )}
-        {copied ? "Ссылка скопирована" : "Поделиться"}
+        {copied ? t("video.copied") : t("video.share")}
       </button>
       <a
         href={`/api/media/${videoId}`}
         download
-        aria-label="Скачать видео"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
+        aria-label={t("video.download")}
+        title={t("video.download")}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-900 transition-all hover:bg-neutral-200 active:scale-95"
       >
         <Download aria-hidden="true" className="h-4 w-4" />
       </a>

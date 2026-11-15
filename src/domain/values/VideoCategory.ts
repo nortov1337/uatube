@@ -1,17 +1,19 @@
+export type CategoryLocale = "ru" | "en";
+
 export const VIDEO_CATEGORIES = [
-  { slug: "music", label: "Музыка" },
-  { slug: "gaming", label: "Игры" },
-  { slug: "education", label: "Образование" },
-  { slug: "tech", label: "Технологии" },
-  { slug: "sport", label: "Спорт" },
-  { slug: "humor", label: "Юмор" },
-  { slug: "film", label: "Кино" },
-  { slug: "news", label: "Новости" },
-  { slug: "lifestyle", label: "Лайфстайл" },
-  { slug: "travel", label: "Путешествия" },
-  { slug: "cooking", label: "Кулинария" },
-  { slug: "art", label: "Творчество" },
-  { slug: "other", label: "Другое" },
+  { slug: "music", labels: { ru: "Музыка", en: "Music" } },
+  { slug: "gaming", labels: { ru: "Игры", en: "Gaming" } },
+  { slug: "education", labels: { ru: "Образование", en: "Education" } },
+  { slug: "tech", labels: { ru: "Технологии", en: "Tech" } },
+  { slug: "sport", labels: { ru: "Спорт", en: "Sports" } },
+  { slug: "humor", labels: { ru: "Юмор", en: "Comedy" } },
+  { slug: "film", labels: { ru: "Кино", en: "Film" } },
+  { slug: "news", labels: { ru: "Новости", en: "News" } },
+  { slug: "lifestyle", labels: { ru: "Лайфстайл", en: "Lifestyle" } },
+  { slug: "travel", labels: { ru: "Путешествия", en: "Travel" } },
+  { slug: "cooking", labels: { ru: "Кулинария", en: "Cooking" } },
+  { slug: "art", labels: { ru: "Творчество", en: "Art" } },
+  { slug: "other", labels: { ru: "Другое", en: "Other" } },
 ] as const;
 
 export type VideoCategorySlug = (typeof VIDEO_CATEGORIES)[number]["slug"];
@@ -21,6 +23,6 @@ export const VIDEO_CATEGORY_SLUGS = VIDEO_CATEGORIES.map((category) => category.
   ...VideoCategorySlug[],
 ];
 
-export function categoryLabel(slug: string): string {
-  return VIDEO_CATEGORIES.find((category) => category.slug === slug)?.label ?? "";
+export function categoryLabel(slug: string, locale: CategoryLocale): string {
+  return VIDEO_CATEGORIES.find((category) => category.slug === slug)?.labels[locale] ?? "";
 }

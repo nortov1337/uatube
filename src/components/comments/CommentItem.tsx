@@ -5,6 +5,7 @@ import { Pencil, Reply, ThumbsUp, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { CommentDTO } from "@/application/dto/CommentDTO";
 import { CommentForm } from "@/components/comments/CommentForm";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Avatar } from "@/components/ui/Avatar";
 import { RichText } from "@/components/ui/RichText";
 import { timeAgo } from "@/lib/format";
@@ -28,6 +29,7 @@ export function CommentItem({
   onToggleLike,
   onReply,
 }: CommentItemProps) {
+  const { locale, t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [replying, setReplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,11 +38,11 @@ export function CommentItem({
   const edited = comment.updatedAt !== comment.createdAt;
 
   const remove = async () => {
-    if (!window.confirm("Удалить комментарий?")) return;
+    if (!window.confirm(t("comments.deleteConfirm"))) return;
     try {
       await onDelete(comment.id, comment.parentId);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Не удалось удалить");
+      setError(requestError instanceof Error ? requestError.message : t("comments.deleteFailed"));
     }
   };
 
@@ -60,16 +62,16 @@ export function CommentItem({
           >
             {comment.author.name}
           </Link>
-          <span className="text-neutral-500">{timeAgo(comment.createdAt)}</span>
-          {edited ? <span className="text-neutral-400">изменён</span> : null}
+          <span className="text-neutral-500">{timeAgo(comment.createdAt, locale)}</span>
+          {edited ? <span className="text-neutral-400">{t("comments.edited")}</span> : null}
         </div>
 
         {editing ? (
           <div className="mt-2">
             <CommentForm
               compact
-              submitLabel="Сохранить"
-              placeholder="Текст комментария"
+              submitLabel={t("comments.save")}
+              placeholder={t("comments.text")}
               onSubmit={async (body) => {
                 await onUpdate(comment.id, body);
                 setEditing(false);
@@ -86,29 +88,32 @@ export function CommentItem({
             type="button"
             onClick={() => void onToggleLike(comment.id)}
             aria-pressed={comment.likedByMe}
-            className={`inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium ${
+            className={`inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium transition-colors ${
               comment.likedByMe ? "text-red-600" : "text-neutral-600 hover:bg-neutral-100"
             }`}
           >
-            <ThumbsUp aria-hidden="true" className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-current" : ""}`} />
-            {comment.likesCount > 0 ? comment.likesCount : "Нравится"}
+            <ThumbsUp
+              aria-hidden="true"
+              className={`h-3.5 w-3.5 ${comment.likedByMe ? "fill-current" : ""}`}
+            />
+            {comment.likesCount > 0 ? comment.likesCount : t("video.liked")}
           </button>
           {onReply ? (
             <button
               type="button"
               onClick={() => setReplying((value) => !value)}
-              className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100"
+              className="inline-flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-100"
             >
               <Reply aria-hidden="true" className="h-3.5 w-3.5" />
-              Ответить
+              {t("comments.reply")}
             </button>
           ) : null}
           {isOwner ? (
             <button
               type="button"
               onClick={() => setEditing(true)}
-              aria-label="Изменить комментарий"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+              aria-label={t("comments.editLabel")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100"
             >
               <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
             </button>
@@ -117,8 +122,8 @@ export function CommentItem({
             <button
               type="button"
               onClick={remove}
-              aria-label="Удалить комментарий"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100"
+              aria-label={t("comments.deleteLabel")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100"
             >
               <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
             </button>
@@ -131,8 +136,8 @@ export function CommentItem({
           <div className="mt-2">
             <CommentForm
               compact
-              placeholder={`Ответ ${comment.author.name}`}
-              submitLabel="Ответить"
+              placeholder={t("comments.replyTo", { name: comment.author.name })}
+              submitLabel={t("comments.reply")}
               onSubmit={onReply}
               onCancel={() => setReplying(false)}
             />

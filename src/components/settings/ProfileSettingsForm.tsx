@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { SettingsDTO } from "@/application/dto/SettingsDTO";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -14,6 +15,7 @@ interface ProfileSettingsFormProps {
 
 export function ProfileSettingsForm({ settings }: ProfileSettingsFormProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState(settings.name);
   const [handle, setHandle] = useState(settings.handle);
   const [bio, setBio] = useState(settings.bio);
@@ -31,7 +33,7 @@ export function ProfileSettingsForm({ settings }: ProfileSettingsFormProps) {
         method: "PATCH",
         body: JSON.stringify({ name, handle, bio }),
       });
-      setNotice("Профиль обновлён");
+      setNotice(t("settings.profileUpdated"));
       router.refresh();
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -43,11 +45,11 @@ export function ProfileSettingsForm({ settings }: ProfileSettingsFormProps) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Имя канала</span>
+        <span className="text-sm font-medium text-neutral-900">{t("settings.channelName")}</span>
         <Input value={name} onChange={(event) => setName(event.target.value)} maxLength={60} />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Адрес канала</span>
+        <span className="text-sm font-medium text-neutral-900">{t("settings.channelHandle")}</span>
         <Input
           value={handle}
           onChange={(event) => setHandle(event.target.value.toLowerCase())}
@@ -56,13 +58,13 @@ export function ProfileSettingsForm({ settings }: ProfileSettingsFormProps) {
         <span className="text-xs text-neutral-500">/channel/{handle || "handle"}</span>
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">О себе</span>
+        <span className="text-sm font-medium text-neutral-900">{t("settings.about")}</span>
         <Textarea
           value={bio}
           onChange={(event) => setBio(event.target.value)}
           rows={4}
           maxLength={500}
-          placeholder="Пара слов о канале"
+          placeholder={t("settings.aboutPlaceholder")}
         />
       </label>
       <div className="text-xs text-neutral-500">Email: {settings.email}</div>
@@ -70,7 +72,7 @@ export function ProfileSettingsForm({ settings }: ProfileSettingsFormProps) {
       {notice ? <p className="text-sm text-emerald-600">{notice}</p> : null}
       <div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Сохраняем…" : "Сохранить профиль"}
+          {pending ? t("settings.saving") : t("settings.saveProfile")}
         </Button>
       </div>
     </form>

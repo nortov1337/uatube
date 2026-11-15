@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { errorMessage, requestJson } from "@/lib/api-client";
 
 interface OwnerActionsProps {
@@ -12,11 +13,12 @@ interface OwnerActionsProps {
 
 export function OwnerActions({ videoId }: OwnerActionsProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const remove = async () => {
-    if (!window.confirm("Удалить видео навсегда?")) return;
+    if (!window.confirm(t("video.deleteConfirm"))) return;
 
     setPending(true);
     setError(null);
@@ -35,17 +37,18 @@ export function OwnerActions({ videoId }: OwnerActionsProps) {
       <div className="flex items-center gap-2">
         <Link
           href={`/studio/${videoId}`}
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 transition-all hover:bg-neutral-200 active:scale-95"
         >
           <Pencil aria-hidden="true" className="h-4 w-4" />
-          Редактировать
+          {t("video.edit")}
         </Link>
         <button
           type="button"
           onClick={remove}
           disabled={pending}
-          aria-label="Удалить видео"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-red-600 hover:bg-red-50 disabled:opacity-60"
+          aria-label={t("video.delete")}
+          title={t("video.delete")}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-red-600 transition-all hover:bg-red-600/10 active:scale-95 disabled:opacity-60"
         >
           <Trash2 aria-hidden="true" className="h-4 w-4" />
         </button>

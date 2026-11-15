@@ -2,9 +2,11 @@
 
 import { Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { useI18n } from "@/components/i18n/I18nProvider";
 
 export function SearchBar() {
   const searchParams = useSearchParams();
+  const { t } = useI18n();
 
   return (
     <form action="/" method="get" role="search" className="relative w-full">
@@ -16,9 +18,9 @@ export function SearchBar() {
         type="search"
         name="q"
         defaultValue={searchParams.get("q") ?? ""}
-        placeholder="Поиск видео"
-        aria-label="Поиск видео"
-        className="h-10 w-full rounded-full border border-neutral-300 bg-neutral-50 pl-9 pr-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-red-500 focus:bg-white"
+        placeholder={t("nav.searchPlaceholder")}
+        aria-label={t("nav.searchLabel")}
+        className="h-10 w-full rounded-full border border-neutral-300 bg-neutral-50 pl-9 pr-3 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-red-500 focus:bg-surface"
       />
     </form>
   );

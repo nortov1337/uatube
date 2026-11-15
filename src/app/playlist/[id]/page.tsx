@@ -6,6 +6,8 @@ import { PlaylistItems } from "@/components/playlist/PlaylistItems";
 import { NotFoundError } from "@/domain/errors/NotFoundError";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,7 @@ async function loadPlaylist(id: string, viewerId: string | null): Promise<Playli
 export default async function PlaylistPage({ params }: PlaylistPageProps) {
   const { id } = await params;
   const viewerId = await currentUserId();
+  const { locale, t } = await getI18n();
   const playlist = await loadPlaylist(id, viewerId);
   const first = playlist.items[0];
 
@@ -42,15 +45,15 @@ export default async function PlaylistPage({ params }: PlaylistPageProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            {playlist.kind === "watch_later" ? "Смотреть позже" : "Плейлист"}
+            {playlist.kind === "watch_later" ? t("playlist.watchLater") : t("playlist.title")}
           </p>
           <h1 className="mt-1 text-xl font-semibold text-neutral-900">{playlist.title}</h1>
           <p className="mt-1 text-sm text-neutral-600">
             <Link href={`/channel/${playlist.owner.handle}`} className="hover:underline">
               {playlist.owner.name}
             </Link>{" "}
-            · {playlist.itemsCount} видео ·{" "}
-            {playlist.visibility === "public" ? "публичный" : "скрытый"}
+            · {countOf("videos", playlist.itemsCount, locale)} ·{" "}
+            {playlist.visibility === "public" ? t("playlist.public") : t("playlist.hidden")}
           </p>
           {playlist.description ? (
             <p className="mt-2 whitespace-pre-wrap text-sm text-neutral-700">
@@ -60,10 +63,10 @@ export default async function PlaylistPage({ params }: PlaylistPageProps) {
           {first ? (
             <Link
               href={`/watch/${first.id}?list=${playlist.id}`}
-              className="mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+              className="mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
             >
               <Play aria-hidden="true" className="h-4 w-4 fill-current" />
-              Смотреть всё
+              {t("playlist.playAll")}
             </Link>
           ) : null}
         </div>

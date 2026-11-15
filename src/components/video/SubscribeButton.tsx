@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { errorMessage, requestJson } from "@/lib/api-client";
+import { formatViews } from "@/lib/format";
 
 interface SubscribeButtonProps {
   handle: string;
@@ -21,6 +23,7 @@ export function SubscribeButton({
   isOwner,
 }: SubscribeButtonProps) {
   const router = useRouter();
+  const { locale, t } = useI18n();
   const [subscribed, setSubscribed] = useState(initialSubscribed);
   const [subscribers, setSubscribers] = useState(initialSubscribers);
   const [pending, setPending] = useState(false);
@@ -59,8 +62,8 @@ export function SubscribeButton({
         disabled={pending}
         aria-pressed={subscribed}
       >
-        {subscribed ? "Вы подписаны" : "Подписаться"}
-        <span className="text-xs opacity-80">{subscribers}</span>
+        {subscribed ? t("video.subscribed") : t("video.subscribe")}
+        <span className="text-xs opacity-80">{formatViews(subscribers, locale)}</span>
       </Button>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>

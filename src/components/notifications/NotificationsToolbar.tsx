@@ -3,10 +3,12 @@
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { requestJson } from "@/lib/api-client";
 
 export function NotificationsToolbar() {
   const router = useRouter();
+  const { t } = useI18n();
   const [pending, setPending] = useState(false);
 
   const markAll = async () => {
@@ -24,10 +26,10 @@ export function NotificationsToolbar() {
       type="button"
       onClick={markAll}
       disabled={pending}
-      className="inline-flex h-9 items-center gap-2 rounded-full bg-neutral-100 px-3 text-sm font-medium text-neutral-900 hover:bg-neutral-200 disabled:opacity-60"
+      className="inline-flex h-9 items-center gap-2 rounded-full bg-neutral-100 px-3 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 disabled:opacity-60"
     >
       <CheckCheck aria-hidden="true" className="h-4 w-4" />
-      Прочитать все
+      {t("notifications.readAll")}
     </button>
   );
 }

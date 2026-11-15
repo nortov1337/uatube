@@ -6,6 +6,7 @@ import { VideoGrid } from "@/components/video/VideoGrid";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
 import { categoryLabel } from "@/domain/values/VideoCategory";
+import { getI18n } from "@/lib/i18n/server";
 import { withParams } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ interface HomePageProps {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { q, tag, category, sort, cursor } = await searchParams;
+  const { locale, t } = await getI18n();
   const viewerId = await currentUserId();
   const activeSort = sort ?? "new";
   const hasFilters = Boolean(q || tag || category) || activeSort !== "new";
@@ -35,23 +37,23 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       : Promise.resolve([]),
   ]);
 
+  const title = q
+    ? t("home.resultsFor", { query: q })
+    : tag
+      ? t("home.tagResults", { tag })
+      : category
+        ? categoryLabel(category, locale)
+        : viewerId
+          ? t("home.recommended")
+          : t("home.home");
+
   return (
     <div>
       <ContinueWatching items={continueWatching} />
 
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold text-neutral-900">
-            {q
-              ? `Результаты по «${q}»`
-              : tag
-                ? `Видео с тегом #${tag}`
-                : category
-                  ? categoryLabel(category)
-                  : viewerId
-                    ? "Рекомендации"
-                    : "Главная"}
-          </h1>
+          <h1 className="text-lg font-semibold text-neutral-900">{title}</h1>
           <SortTabs active={activeSort} q={q} tag={tag} category={category} />
         </div>
         <CategoryChips active={category} q={q} tag={tag} />
@@ -59,12 +61,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <VideoGrid
         videos={feed.items}
-        emptyTitle={q || tag ? "Ничего не найдено" : "Пока нет видео"}
-        emptyDescription={
-          q || tag
-            ? "Попробуйте другой запрос или тег."
-            : "Загрузите первое видео — оно сразу появится в ленте."
-        }
+        emptyTitle={q || tag ? t("home.nothingFound") : undefined}
+        emptyDescription={q || tag ? t("home.tryAnother") : undefined}
       />
 
       {feed.nextCursor ? (
@@ -77,9 +75,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               sort: activeSort === "new" ? undefined : activeSort,
               cursor: feed.nextCursor,
             })}
-            className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-5 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
+            className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-5 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200"
           >
-            Показать ещё
+            {t("home.showMore")}
           </Link>
         </div>
       ) : null}

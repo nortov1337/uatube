@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FieldError } from "@/components/auth/FieldError";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { errorMessage, requestJson } from "@/lib/api-client";
@@ -14,6 +15,7 @@ interface LoginFormProps {
 
 export function LoginForm({ next }: LoginFormProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function LoginForm({ next }: LoginFormProps) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Email</span>
+        <span className="text-sm font-medium text-neutral-900">{t("auth.email")}</span>
         <Input
           type="email"
           value={email}
@@ -52,7 +54,7 @@ export function LoginForm({ next }: LoginFormProps) {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Пароль</span>
+        <span className="text-sm font-medium text-neutral-900">{t("auth.password")}</span>
         <Input
           type="password"
           value={password}
@@ -66,13 +68,13 @@ export function LoginForm({ next }: LoginFormProps) {
       <FieldError message={error} />
 
       <Button type="submit" disabled={pending} className="mt-1">
-        {pending ? "Входим…" : "Войти"}
+        {pending ? t("auth.signingIn") : t("auth.signIn")}
       </Button>
 
       <p className="text-center text-sm text-neutral-600">
-        Нет аккаунта?{" "}
+        {t("auth.noAccount")}{" "}
         <Link href="/register" className="font-semibold text-red-600 hover:underline">
-          Зарегистрироваться
+          {t("auth.signUp")}
         </Link>
       </p>
     </form>

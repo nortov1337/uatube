@@ -6,7 +6,9 @@ import type { Page } from "@/application/dto/Page";
 import { CommentForm } from "@/components/comments/CommentForm";
 import { CommentItem } from "@/components/comments/CommentItem";
 import { CommentSkeleton } from "@/components/comments/CommentSkeleton";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { useComments, type CommentSortValue } from "@/hooks/useComments";
+import { countOf } from "@/lib/i18n/units";
 
 interface CommentsSectionProps {
   videoId: string;
@@ -17,11 +19,6 @@ interface CommentsSectionProps {
   videoAuthorId: string;
 }
 
-const SORTS: Array<{ value: CommentSortValue; label: string }> = [
-  { value: "new", label: "Новые" },
-  { value: "top", label: "Популярные" },
-];
-
 export function CommentsSection({
   videoId,
   initial,
@@ -30,23 +27,31 @@ export function CommentsSection({
   currentUserId,
   videoAuthorId,
 }: CommentsSectionProps) {
+  const { locale, t } = useI18n();
   const comments = useComments({ videoId, initial, initialSort });
   const count = Math.max(totalCount, comments.items.length);
+
+  const sorts: Array<{ value: CommentSortValue; label: string }> = [
+    { value: "new", label: t("comments.newest") },
+    { value: "top", label: t("comments.top") },
+  ];
 
   return (
     <section className="mt-6">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-base font-semibold text-neutral-900">{count} комментариев</h2>
+        <h2 className="text-base font-semibold text-neutral-900">
+          {countOf("comments", count, locale)}
+        </h2>
         <div className="flex items-center gap-1 rounded-full bg-neutral-100 p-1">
-          {SORTS.map((sort) => (
+          {sorts.map((sort) => (
             <button
               key={sort.value}
               type="button"
               onClick={() => void comments.changeSort(sort.value)}
-              className={`h-7 rounded-full px-2.5 text-xs font-medium ${
+              className={`h-7 rounded-full px-2.5 text-xs font-medium transition-all ${
                 comments.sort === sort.value
-                  ? "bg-white text-neutral-900 shadow-sm"
-                  : "text-neutral-600"
+                  ? "bg-surface text-neutral-900 shadow-sm"
+                  : "text-neutral-600 hover:text-neutral-900"
               }`}
             >
               {sort.label}
@@ -65,9 +70,9 @@ export function CommentsSection({
             href={`/login?next=${encodeURIComponent(`/watch/${videoId}`)}`}
             className="font-semibold text-red-600 hover:underline"
           >
-            Войдите
+            {t("comments.loginPrefix")}
           </Link>
-          , чтобы оставить комментарий.
+          {t("comments.loginSuffix")}
         </p>
       )}
 
@@ -86,9 +91,7 @@ export function CommentsSection({
                 onUpdate={comments.update}
                 onToggleLike={comments.toggleLike}
                 onReply={
-                  currentUserId
-                    ? (body) => comments.add(body, comment.id)
-                    : undefined
+                  currentUserId ? (body) => comments.add(body, comment.id) : undefined
                 }
               />
 
@@ -108,10 +111,12 @@ export function CommentsSection({
                   {loaded.nextCursor ? (
                     <button
                       type="button"
-                      onClick={() => void comments.loadReplies(comment.id, loaded.nextCursor ?? undefined)}
+                      onClick={() =>
+                        void comments.loadReplies(comment.id, loaded.nextCursor ?? undefined)
+                      }
                       className="w-fit text-xs font-semibold text-red-600 hover:underline"
                     >
-                      Показать ещё ответы
+                      {t("comments.showMoreReplies")}
                     </button>
                   ) : null}
                 </div>
@@ -121,7 +126,7 @@ export function CommentsSection({
                   onClick={() => void comments.loadReplies(comment.id)}
                   className="ml-10 w-fit text-xs font-semibold text-red-600 hover:underline"
                 >
-                  Показать ответы ({comment.repliesCount})
+                  {t("comments.showReplies", { count: comment.repliesCount })}
                 </button>
               ) : null}
             </div>
@@ -131,7 +136,7 @@ export function CommentsSection({
       </div>
 
       {comments.items.length === 0 ? (
-        <p className="mt-4 text-sm text-neutral-500">Комментариев пока нет.</p>
+        <p className="mt-4 text-sm text-neutral-500">{t("comments.empty")}</p>
       ) : null}
 
       {comments.nextCursor ? (
@@ -139,9 +144,9 @@ export function CommentsSection({
           type="button"
           onClick={() => void comments.loadMore()}
           disabled={comments.loading}
-          className="mt-4 inline-flex h-10 items-center rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-200 disabled:opacity-60"
+          className="mt-4 inline-flex h-10 items-center rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 disabled:opacity-60"
         >
-          {comments.loading ? "Загружаем…" : "Показать ещё"}
+          {comments.loading ? t("comments.loadingMore") : t("comments.more")}
         </button>
       ) : null}
     </section>

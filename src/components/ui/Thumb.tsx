@@ -15,7 +15,12 @@ export function Thumb({ src, title, durationSec, className = "" }: ThumbProps) {
       className={`relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-100 ${className}`}
     >
       {src ? (
-        <img src={src} alt={title} loading="lazy" className="h-full w-full object-cover" />
+        <img
+          src={src}
+          alt={title}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-neutral-200 via-neutral-300 to-neutral-400 text-4xl font-semibold text-white">
           {initial}

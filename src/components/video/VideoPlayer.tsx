@@ -3,6 +3,7 @@
 import { PictureInPicture2, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { requestJson } from "@/lib/api-client";
 
 interface VideoPlayerProps {
@@ -17,6 +18,7 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const router = useRouter();
+  const { t } = useI18n();
   const [speed, setSpeed] = useState(1);
 
   useEffect(() => {
@@ -87,7 +89,7 @@ export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: Vide
     <div
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="overflow-hidden rounded-2xl bg-black outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+      className="overflow-hidden rounded-2xl bg-black shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-red-500"
     >
       <video
         ref={videoRef}
@@ -102,17 +104,17 @@ export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: Vide
         }}
         className="aspect-video w-full bg-black"
       />
-      <div className="flex items-center gap-2 bg-black px-3 py-2 text-xs text-neutral-300">
+      <div className="flex items-center gap-2 bg-black px-3 py-2 text-xs text-white/70">
         <Settings2 aria-hidden="true" className="h-3.5 w-3.5" />
         <label className="flex items-center gap-1">
-          Скорость
+          {t("watch.playbackSpeed")}
           <select
             value={speed}
             onChange={(event) => applySpeed(Number(event.target.value))}
-            className="rounded bg-neutral-800 px-1 py-0.5 text-xs text-white outline-none"
+            className="rounded bg-white/10 px-1 py-0.5 text-xs text-white outline-none transition-colors hover:bg-white/15"
           >
             {SPEEDS.map((value) => (
-              <option key={value} value={value}>
+              <option key={value} value={value} className="bg-neutral-900 text-white">
                 {value}×
               </option>
             ))}
@@ -121,12 +123,12 @@ export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: Vide
         <button
           type="button"
           onClick={() => void videoRef.current?.requestPictureInPicture?.().catch(() => null)}
-          className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-neutral-800"
+          className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-white/10"
         >
           <PictureInPicture2 aria-hidden="true" className="h-3.5 w-3.5" />
           PiP
         </button>
-        <span className="hidden sm:inline">Space — пауза, ←/→ — 5 c, J/L — 10 c, F — во весь экран</span>
+        <span className="hidden sm:inline">{t("watch.shortcuts")}</span>
       </div>
     </div>
   );

@@ -1,68 +1,44 @@
 import Link from "next/link";
-import {
-  Bell,
-  Clock,
-  Clapperboard,
-  History,
-  Home,
-  ListVideo,
-  Settings,
-  Users,
-} from "lucide-react";
+import { SidebarNav, type NavItem } from "@/components/layout/SidebarNav";
+import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { Avatar } from "@/components/ui/Avatar";
 import { container } from "@/lib/container";
-
-const ITEMS = [
-  { href: "/", label: "Главная", icon: Home },
-  { href: "/subscriptions", label: "Подписки", icon: Users },
-  { href: "/history", label: "История", icon: History },
-  { href: "/playlists", label: "Плейлисты", icon: ListVideo },
-  { href: "/studio", label: "Мои видео", icon: Clapperboard },
-];
-
-const USER_ITEMS = [
-  { href: "/notifications", label: "Уведомления", icon: Bell },
-  { href: "/settings", label: "Настройки", icon: Settings },
-];
+import { getI18n } from "@/lib/i18n/server";
+import { getPreferences } from "@/lib/preferences-server";
 
 export async function Sidebar() {
+  const { t } = await getI18n();
+  const { theme } = await getPreferences();
   const user = await container.auth.currentUser();
   const channels = user ? await container.subscriptions.list(user.id) : [];
 
+  const items: NavItem[] = [
+    { href: "/", label: t("nav.home"), icon: "home" },
+    { href: "/subscriptions", label: t("nav.subscriptions"), icon: "subscriptions" },
+    { href: "/history", label: t("nav.history"), icon: "history" },
+    { href: "/playlists", label: t("nav.playlists"), icon: "playlists" },
+    { href: "/studio", label: t("nav.studio"), icon: "studio" },
+  ];
+
+  const userItems: NavItem[] = [
+    { href: "/notifications", label: t("nav.notifications"), icon: "notifications" },
+    { href: "/settings", label: t("nav.settings"), icon: "settings" },
+  ];
+
   return (
-    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-neutral-200 pb-6 pt-4 pr-3 lg:block">
-      <nav className="flex flex-col gap-0.5">
-        {ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-800 hover:bg-neutral-100"
-          >
-            <item.icon aria-hidden="true" className="h-5 w-5 text-neutral-600" />
-            {item.label}
-          </Link>
-        ))}
-        {user ? (
-          <Link
-            href="/playlists"
-            className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-800 hover:bg-neutral-100"
-          >
-            <Clock aria-hidden="true" className="h-5 w-5 text-neutral-600" />
-            Смотреть позже
-          </Link>
-        ) : null}
-      </nav>
+    <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-line pb-6 pt-4 pr-3 lg:block">
+      <SidebarNav items={items} />
 
       {channels.length > 0 ? (
-        <div className="mt-4 border-t border-neutral-200 pt-3">
+        <div className="mt-4 border-t border-line pt-3">
           <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            Подписки
+            {t("nav.subscriptions")}
           </p>
           {channels.slice(0, 12).map((channel) => (
             <Link
               key={channel.id}
               href={`/channel/${channel.handle}`}
-              className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm text-neutral-800 hover:bg-neutral-100"
+              className="flex h-10 items-center gap-2 rounded-xl px-3 text-sm text-neutral-800 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
             >
               <Avatar
                 handle={channel.handle}
@@ -77,19 +53,16 @@ export async function Sidebar() {
       ) : null}
 
       {user ? (
-        <div className="mt-4 border-t border-neutral-200 pt-3">
-          {USER_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-800 hover:bg-neutral-100"
-            >
-              <item.icon aria-hidden="true" className="h-5 w-5 text-neutral-600" />
-              {item.label}
-            </Link>
-          ))}
+        <div className="mt-4 border-t border-line pt-3">
+          <SidebarNav items={userItems} />
         </div>
       ) : null}
+
+      <div className="mt-4 border-t border-line pt-3">
+        <div className="animate-fade-up rounded-2xl border border-line bg-surface-muted p-2.5">
+          <PreferencesPanel theme={theme} />
+        </div>
+      </div>
     </aside>
   );
 }

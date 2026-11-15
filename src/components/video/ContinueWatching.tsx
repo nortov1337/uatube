@@ -3,19 +3,22 @@ import { History } from "lucide-react";
 import type { HistoryItemDTO } from "@/application/dto/HistoryItemDTO";
 import { Thumb } from "@/components/ui/Thumb";
 import { timeAgo } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
 
 interface ContinueWatchingProps {
   items: HistoryItemDTO[];
 }
 
-export function ContinueWatching({ items }: ContinueWatchingProps) {
+export async function ContinueWatching({ items }: ContinueWatchingProps) {
   if (items.length === 0) return null;
+
+  const { locale, t } = await getI18n();
 
   return (
     <section className="mb-8">
       <div className="mb-3 flex items-center gap-2">
         <History aria-hidden="true" className="h-4 w-4 text-neutral-500" />
-        <h2 className="text-sm font-semibold text-neutral-900">Продолжить просмотр</h2>
+        <h2 className="text-sm font-semibold text-neutral-900">{t("watch.continue")}</h2>
       </div>
       <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
         {items.map((item) => {
@@ -25,7 +28,7 @@ export function ContinueWatching({ items }: ContinueWatchingProps) {
             <Link
               key={item.video.id}
               href={`/watch/${item.video.id}`}
-              className="group w-56 shrink-0"
+              className="group w-56 shrink-0 transition-transform duration-300 hover:-translate-y-0.5"
             >
               <div className="relative">
                 <Thumb
@@ -37,11 +40,11 @@ export function ContinueWatching({ items }: ContinueWatchingProps) {
                   <div className="h-full rounded-bl-xl bg-red-600" style={{ width: `${percent}%` }} />
                 </div>
               </div>
-              <p className="mt-2 line-clamp-2 text-sm font-semibold text-neutral-900 group-hover:text-red-600">
+              <p className="mt-2 line-clamp-2 text-sm font-semibold text-neutral-900 transition-colors group-hover:text-red-600">
                 {item.video.title}
               </p>
               <p className="mt-0.5 truncate text-xs text-neutral-600">
-                {item.video.author.name} · {timeAgo(item.watchedAt)}
+                {item.video.author.name} · {timeAgo(item.watchedAt, locale)}
               </p>
             </Link>
           );

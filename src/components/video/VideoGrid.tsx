@@ -3,6 +3,7 @@ import { Video } from "lucide-react";
 import type { VideoCardDTO } from "@/application/dto/VideoCardDTO";
 import { VideoCard } from "@/components/video/VideoCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getI18n } from "@/lib/i18n/server";
 
 interface VideoGridProps {
   videos: VideoCardDTO[];
@@ -11,25 +12,28 @@ interface VideoGridProps {
   emptyAction?: { href: string; label: string } | null;
 }
 
-export function VideoGrid({
+export async function VideoGrid({
   videos,
-  emptyTitle = "Пока нет видео",
-  emptyDescription = "Загрузите первое видео — оно сразу появится в ленте.",
-  emptyAction = { href: "/upload", label: "Загрузить видео" },
+  emptyTitle,
+  emptyDescription,
+  emptyAction,
 }: VideoGridProps) {
+  const { t } = await getI18n();
+  const action = emptyAction === undefined ? { href: "/upload", label: t("nav.uploadTitle") } : emptyAction;
+
   if (videos.length === 0) {
     return (
       <EmptyState
         icon={<Video className="h-10 w-10" />}
-        title={emptyTitle}
-        description={emptyDescription}
+        title={emptyTitle ?? t("home.noVideos")}
+        description={emptyDescription ?? t("home.uploadFirst")}
         action={
-          emptyAction ? (
+          action ? (
             <Link
-              href={emptyAction.href}
-              className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+              href={action.href}
+              className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
             >
-              {emptyAction.label}
+              {action.label}
             </Link>
           ) : null
         }

@@ -7,6 +7,8 @@ import { VideoGrid } from "@/components/video/VideoGrid";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
 import { formatViews } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,7 @@ export default async function SubscriptionsPage() {
   const userId = await currentUserId();
   if (!userId) redirect("/login?next=/subscriptions");
 
+  const { locale, t } = await getI18n();
   const [channels, feed] = await Promise.all([
     container.subscriptions.list(userId),
     container.subscriptions.feed(userId, { limit: 24 }),
@@ -21,9 +24,9 @@ export default async function SubscriptionsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-neutral-900">Подписки</h1>
+      <h1 className="text-xl font-semibold text-neutral-900">{t("subscriptions.title")}</h1>
       <p className="mt-1 text-sm text-neutral-600">
-        {channels.length} каналов · новые видео подписок в одном месте.
+        {countOf("channels", channels.length, locale)} · {t("subscriptions.summary")}
       </p>
 
       {channels.length > 0 ? (
@@ -32,7 +35,7 @@ export default async function SubscriptionsPage() {
             <Link
               key={channel.id}
               href={`/channel/${channel.handle}`}
-              className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl p-2 text-center hover:bg-neutral-50"
+              className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl p-2 text-center transition-colors hover:bg-neutral-50"
             >
               <Avatar
                 handle={channel.handle}
@@ -44,7 +47,7 @@ export default async function SubscriptionsPage() {
                 {channel.name}
               </span>
               <span className="text-[11px] text-neutral-500">
-                {formatViews(channel.subscribers)}
+                {formatViews(channel.subscribers, locale)}
               </span>
             </Link>
           ))}
@@ -55,23 +58,23 @@ export default async function SubscriptionsPage() {
         {channels.length === 0 ? (
           <EmptyState
             icon={<Users className="h-10 w-10" />}
-            title="Вы пока ни на кого не подписаны"
-            description="Подпишитесь на каналы, чтобы видеть их новые видео здесь."
+            title={t("subscriptions.empty")}
+            description={t("subscriptions.emptyDesc")}
             action={
               <Link
                 href="/"
-                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-700 active:scale-95"
               >
-                Смотреть видео
+                {t("subscriptions.watchVideos")}
               </Link>
             }
           />
         ) : (
           <VideoGrid
             videos={feed.items}
-            emptyTitle="Новых видео нет"
-            emptyDescription="Как только каналы опубликуют видео, они появятся здесь."
-            emptyAction={{ href: "/", label: "Смотреть все видео" }}
+            emptyTitle={t("subscriptions.noNew")}
+            emptyDescription={t("subscriptions.noNewDesc")}
+            emptyAction={{ href: "/", label: t("subscriptions.watchAll") }}
           />
         )}
       </div>

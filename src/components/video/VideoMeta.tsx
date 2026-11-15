@@ -1,23 +1,27 @@
 import type { VideoDetailsDTO } from "@/application/dto/VideoDetailsDTO";
 import { Chip } from "@/components/ui/Chip";
 import { categoryLabel } from "@/domain/values/VideoCategory";
-import { formatViews, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
+import { countOf } from "@/lib/i18n/units";
 
 interface VideoMetaProps {
   video: VideoDetailsDTO;
 }
 
-export function VideoMeta({ video }: VideoMetaProps) {
+export async function VideoMeta({ video }: VideoMetaProps) {
+  const { locale, t } = await getI18n();
+
   return (
     <div className="min-w-0">
       <h1 className="text-lg font-semibold leading-snug text-neutral-900 sm:text-xl">
         {video.title}
       </h1>
       <p className="mt-1 text-sm text-neutral-600">
-        {formatViews(video.views)} просмотров · {timeAgo(video.createdAt)}
-        {video.category ? ` · ${categoryLabel(video.category)}` : ""}
+        {countOf("views", video.views, locale)} · {timeAgo(video.createdAt, locale)}
+        {video.category ? ` · ${categoryLabel(video.category, locale)}` : ""}
         {video.visibility !== "public"
-          ? ` · ${video.visibility === "private" ? "приватное" : "по ссылке"}`
+          ? ` · ${video.visibility === "private" ? t("watch.private") : t("watch.unlisted")}`
           : ""}
       </p>
       {video.tags.length > 0 ? (

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { container } from "@/lib/container";
 import { currentUserId } from "@/lib/http/currentUserId";
 import { timeAgo } from "@/lib/format";
+import { getI18n } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,13 @@ export default async function NotificationsPage() {
   const userId = await currentUserId();
   if (!userId) redirect("/login?next=/notifications");
 
+  const { locale, t } = await getI18n();
   const page = await container.notifications.list(userId, { limit: 50 });
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold text-neutral-900">Уведомления</h1>
+        <h1 className="text-xl font-semibold text-neutral-900">{t("notifications.title")}</h1>
         {page.items.length > 0 ? <NotificationsToolbar /> : null}
       </div>
 
@@ -27,8 +29,8 @@ export default async function NotificationsPage() {
         <div className="mt-6">
           <EmptyState
             icon={<Bell className="h-10 w-10" />}
-            title="Уведомлений нет"
-            description="Здесь появятся новые видео ваших подписок и ответы на комментарии."
+            title={t("notifications.empty")}
+            description={t("notifications.emptyDesc")}
           />
         </div>
       ) : (
@@ -36,7 +38,9 @@ export default async function NotificationsPage() {
           {page.items.map((item) => (
             <div
               key={item.id}
-              className={`flex items-start gap-3 p-3 ${item.read ? "" : "bg-red-50/50"}`}
+              className={`flex items-start gap-3 p-3 transition-colors ${
+                item.read ? "" : "bg-red-600/5"
+              }`}
             >
               <span
                 aria-hidden="true"
@@ -46,39 +50,27 @@ export default async function NotificationsPage() {
               />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-neutral-900">
-                  {item.kind === "new_video" ? (
-                    <>
-                      <Link
-                        href={`/channel/${item.actorHandle}`}
-                        className="font-semibold hover:underline"
-                      >
-                        {item.actorName}
-                      </Link>{" "}
-                      опубликовал новое видео
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href={`/channel/${item.actorHandle}`}
-                        className="font-semibold hover:underline"
-                      >
-                        {item.actorName}
-                      </Link>{" "}
-                      ответил на ваш комментарий
-                    </>
-                  )}
+                  <Link
+                    href={`/channel/${item.actorHandle}`}
+                    className="font-semibold hover:underline"
+                  >
+                    {item.actorName}
+                  </Link>{" "}
+                  {item.kind === "new_video"
+                    ? t("notifications.published")
+                    : t("notifications.replied")}
                 </p>
                 {item.videoId ? (
                   <Link
                     href={`/watch/${item.videoId}`}
                     className="mt-0.5 line-clamp-2 text-sm font-medium text-red-600 hover:underline"
                   >
-                    {item.body || "Открыть видео"}
+                    {item.body || t("notifications.open")}
                   </Link>
                 ) : (
                   <p className="mt-0.5 line-clamp-2 text-sm text-neutral-700">{item.body}</p>
                 )}
-                <p className="mt-1 text-xs text-neutral-500">{timeAgo(item.createdAt)}</p>
+                <p className="mt-1 text-xs text-neutral-500">{timeAgo(item.createdAt, locale)}</p>
               </div>
               <NotificationRemove id={item.id} />
             </div>

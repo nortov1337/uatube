@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FieldError } from "@/components/auth/FieldError";
+import { useI18n } from "@/components/i18n/I18nProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { errorMessage, requestJson } from "@/lib/api-client";
@@ -14,6 +15,7 @@ interface RegisterFormProps {
 
 export function RegisterForm({ next }: RegisterFormProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +44,7 @@ export function RegisterForm({ next }: RegisterFormProps) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Имя</span>
+        <span className="text-sm font-medium text-neutral-900">{t("auth.name")}</span>
         <Input
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -53,7 +55,7 @@ export function RegisterForm({ next }: RegisterFormProps) {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Email</span>
+        <span className="text-sm font-medium text-neutral-900">{t("auth.email")}</span>
         <Input
           type="email"
           value={email}
@@ -64,7 +66,7 @@ export function RegisterForm({ next }: RegisterFormProps) {
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-neutral-900">Пароль</span>
+        <span className="text-sm font-medium text-neutral-900">{t("auth.password")}</span>
         <Input
           type="password"
           value={password}
@@ -74,19 +76,19 @@ export function RegisterForm({ next }: RegisterFormProps) {
           required
           invalid={Boolean(error)}
         />
-        <span className="text-xs text-neutral-500">Минимум 8 символов</span>
+        <span className="text-xs text-neutral-500">{t("auth.minLength")}</span>
       </label>
 
       <FieldError message={error} />
 
       <Button type="submit" disabled={pending} className="mt-1">
-        {pending ? "Создаём…" : "Создать аккаунт"}
+        {pending ? t("auth.creating") : t("auth.createAccount")}
       </Button>
 
       <p className="text-center text-sm text-neutral-600">
-        Уже есть аккаунт?{" "}
+        {t("auth.haveAccount")}{" "}
         <Link href="/login" className="font-semibold text-red-600 hover:underline">
-          Войти
+          {t("auth.signIn")}
         </Link>
       </p>
     </form>
