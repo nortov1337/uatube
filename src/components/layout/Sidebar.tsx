@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { SidebarNav, type NavItem } from "@/components/layout/SidebarNav";
-import { PreferencesPanel } from "@/components/settings/PreferencesPanel";
 import { Avatar } from "@/components/ui/Avatar";
 import { container } from "@/lib/container";
 import { getI18n } from "@/lib/i18n/server";
-import { getPreferences } from "@/lib/preferences-server";
 
 export async function Sidebar() {
   const { t } = await getI18n();
-  const { theme } = await getPreferences();
   const user = await container.auth.currentUser();
   const channels = user ? await container.subscriptions.list(user.id) : [];
 
@@ -57,12 +54,6 @@ export async function Sidebar() {
           <SidebarNav items={userItems} />
         </div>
       ) : null}
-
-      <div className="mt-4 border-t border-line pt-3">
-        <div className="animate-fade-up rounded-2xl border border-line bg-surface-muted p-2.5">
-          <PreferencesPanel theme={theme} />
-        </div>
-      </div>
     </aside>
   );
 }
