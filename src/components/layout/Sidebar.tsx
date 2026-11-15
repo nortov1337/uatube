@@ -19,6 +19,9 @@ export async function Sidebar() {
 
   const userItems: NavItem[] = [
     { href: "/notifications", label: t("nav.notifications"), icon: "notifications" },
+  ];
+
+  const settingsItems: NavItem[] = [
     { href: "/settings", label: t("nav.settings"), icon: "settings" },
   ];
 
@@ -54,6 +57,10 @@ export async function Sidebar() {
           <SidebarNav items={userItems} />
         </div>
       ) : null}
+
+      <div className="mt-4 border-t border-line pt-3">
+        <SidebarNav items={settingsItems} />
+      </div>
     </aside>
   );
 }

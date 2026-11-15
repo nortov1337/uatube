@@ -14,7 +14,6 @@ export const config = {
   matcher: [
     "/upload",
     "/studio/:path*",
-    "/settings/:path*",
     "/history/:path*",
     "/subscriptions/:path*",
     "/notifications/:path*",

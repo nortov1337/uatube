@@ -140,6 +140,7 @@ const ru = {
 
   "settings.title": "Настройки",
   "settings.openChannel": "Открыть канал",
+  "settings.guestHint": "Оформление канала, профиль и безопасность появятся после входа.",
   "settings.appearance": "Оформление канала",
   "settings.appearanceDesc": "Аватар и баннер видны на канале и под видео.",
   "settings.profile": "Профиль",
@@ -421,6 +422,7 @@ const en: Record<MessageKey, string> = {
 
   "settings.title": "Settings",
   "settings.openChannel": "Open channel",
+  "settings.guestHint": "Channel appearance, profile and security will appear after you sign in.",
   "settings.appearance": "Channel appearance",
   "settings.appearanceDesc": "Avatar and banner appear on your channel and under videos.",
   "settings.profile": "Profile",

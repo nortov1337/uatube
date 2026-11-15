@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { DeleteAccount } from "@/components/settings/DeleteAccount";
 import { ImageSettings } from "@/components/settings/ImageSettings";
 import { PasswordSettingsForm } from "@/components/settings/PasswordSettingsForm";
@@ -32,22 +31,29 @@ function Section({
 
 export default async function SettingsPage() {
   const userId = await currentUserId();
-  if (!userId) redirect("/login?next=/settings");
-
   const { t } = await getI18n();
   const { theme } = await getPreferences();
-  const settings = await container.profile.get(userId);
+  const settings = userId ? await container.profile.get(userId) : null;
 
   return (
     <div className="mx-auto w-full max-w-2xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-neutral-900">{t("settings.title")}</h1>
-        <Link
-          href={`/channel/${settings.handle}`}
-          className="text-sm font-medium text-red-600 hover:underline"
-        >
-          {t("settings.openChannel")}
-        </Link>
+        {settings ? (
+          <Link
+            href={`/channel/${settings.handle}`}
+            className="text-sm font-medium text-red-600 hover:underline"
+          >
+            {t("settings.openChannel")}
+          </Link>
+        ) : (
+          <Link
+            href="/login?next=/settings"
+            className="text-sm font-medium text-red-600 hover:underline"
+          >
+            {t("nav.login")}
+          </Link>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
@@ -55,26 +61,32 @@ export default async function SettingsPage() {
           <PreferencesPanel theme={theme} />
         </Section>
 
-        <Section title={t("settings.appearance")} description={t("settings.appearanceDesc")}>
-          <ImageSettings
-            handle={settings.handle}
-            name={settings.name}
-            avatarUrl={settings.avatarUrl}
-            bannerUrl={settings.bannerUrl}
-          />
-        </Section>
+        {settings ? (
+          <>
+            <Section title={t("settings.appearance")} description={t("settings.appearanceDesc")}>
+              <ImageSettings
+                handle={settings.handle}
+                name={settings.name}
+                avatarUrl={settings.avatarUrl}
+                bannerUrl={settings.bannerUrl}
+              />
+            </Section>
 
-        <Section title={t("settings.profile")} description={t("settings.profileDesc")}>
-          <ProfileSettingsForm settings={settings} />
-        </Section>
+            <Section title={t("settings.profile")} description={t("settings.profileDesc")}>
+              <ProfileSettingsForm settings={settings} />
+            </Section>
 
-        <Section title={t("settings.security")} description={t("settings.securityDesc")}>
-          <PasswordSettingsForm />
-        </Section>
+            <Section title={t("settings.security")} description={t("settings.securityDesc")}>
+              <PasswordSettingsForm />
+            </Section>
 
-        <Section title={t("settings.delete")}>
-          <DeleteAccount />
-        </Section>
+            <Section title={t("settings.delete")}>
+              <DeleteAccount />
+            </Section>
+          </>
+        ) : (
+          <p className="animate-fade-up text-sm text-neutral-600">{t("settings.guestHint")}</p>
+        )}
       </div>
     </div>
   );
