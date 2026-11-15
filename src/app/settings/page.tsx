@@ -51,7 +51,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <Section title={t("prefs.title")} description={t("prefs.hint")}>
+        <Section title={t("prefs.title")}>
           <PreferencesPanel theme={theme} />
         </Section>
 
