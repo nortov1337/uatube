@@ -30,7 +30,7 @@ export async function Sidebar() {
       <SidebarNav items={items} />
 
       {channels.length > 0 ? (
-        <div className="mt-4 border-t border-line pt-3">
+        <div className="mt-4 pt-3">
           <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
             {t("nav.subscriptions")}
           </p>
@@ -53,12 +53,12 @@ export async function Sidebar() {
       ) : null}
 
       {user ? (
-        <div className="mt-4 border-t border-line pt-3">
+        <div className="mt-4 pt-3">
           <SidebarNav items={userItems} />
         </div>
       ) : null}
 
-      <div className="mt-4 border-t border-line pt-3">
+      <div className="mt-4 pt-3">
         <SidebarNav items={settingsItems} />
       </div>
     </aside>
