@@ -15,13 +15,9 @@ export async function Sidebar() {
     { href: "/history", label: t("nav.history"), icon: "history" },
     { href: "/playlists", label: t("nav.playlists"), icon: "playlists" },
     { href: "/studio", label: t("nav.studio"), icon: "studio" },
-  ];
-
-  const userItems: NavItem[] = [
-    { href: "/notifications", label: t("nav.notifications"), icon: "notifications" },
-  ];
-
-  const settingsItems: NavItem[] = [
+    ...(user
+      ? [{ href: "/notifications", label: t("nav.notifications"), icon: "notifications" as const }]
+      : []),
     { href: "/settings", label: t("nav.settings"), icon: "settings" },
   ];
 
@@ -51,16 +47,6 @@ export async function Sidebar() {
           ))}
         </div>
       ) : null}
-
-      {user ? (
-        <div className="mt-4 pt-3">
-          <SidebarNav items={userItems} />
-        </div>
-      ) : null}
-
-      <div className="mt-4 pt-3">
-        <SidebarNav items={settingsItems} />
-      </div>
     </aside>
   );
 }
