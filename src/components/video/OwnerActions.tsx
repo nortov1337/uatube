@@ -1,6 +1,7 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { errorMessage, requestJson } from "@/lib/api-client";
@@ -21,7 +22,7 @@ export function OwnerActions({ videoId }: OwnerActionsProps) {
     setError(null);
     try {
       await requestJson<null>(`/api/videos/${videoId}`, { method: "DELETE" });
-      router.push("/");
+      router.push("/studio");
       router.refresh();
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -31,15 +32,24 @@ export function OwnerActions({ videoId }: OwnerActionsProps) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={remove}
-        disabled={pending}
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
-      >
-        <Trash2 aria-hidden="true" className="h-4 w-4" />
-        Удалить
-      </button>
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/studio/${videoId}`}
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
+        >
+          <Pencil aria-hidden="true" className="h-4 w-4" />
+          Редактировать
+        </Link>
+        <button
+          type="button"
+          onClick={remove}
+          disabled={pending}
+          aria-label="Удалить видео"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 text-red-600 hover:bg-red-50 disabled:opacity-60"
+        >
+          <Trash2 aria-hidden="true" className="h-4 w-4" />
+        </button>
+      </div>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );

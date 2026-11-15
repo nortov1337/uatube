@@ -5,4 +5,6 @@ export interface VideoDetailsDTO extends VideoCardDTO {
   mimeType: string;
   sizeBytes: number;
   likedByMe: boolean;
+  visibility: string;
+  commentsCount: number;
 }

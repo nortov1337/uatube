@@ -8,6 +8,9 @@ export class PrismaUserMapper {
       email: row.email,
       handle: row.handle,
       name: row.name,
+      bio: row.bio,
+      avatarName: row.avatarName,
+      bannerName: row.bannerName,
       passwordHash: row.passwordHash,
       createdAt: row.createdAt,
     };

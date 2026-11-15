@@ -16,6 +16,9 @@ export function useUploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
+  const [category, setCategory] = useState("");
+  const [visibility, setVisibility] = useState("public");
   const [progress, setProgress] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +46,9 @@ export function useUploadForm() {
     form.append("file", file);
     form.append("title", title.trim());
     form.append("description", description.trim());
+    form.append("tags", tags.trim());
+    form.append("category", category);
+    form.append("visibility", visibility);
     form.append("durationSec", String(metadata?.durationSec ?? 0));
     if (metadata?.thumbBlob) form.append("thumb", metadata.thumbBlob, "thumb.jpg");
 
@@ -60,6 +66,9 @@ export function useUploadForm() {
     file,
     title,
     description,
+    tags,
+    category,
+    visibility,
     metadata,
     progress,
     pending,
@@ -67,6 +76,9 @@ export function useUploadForm() {
     selectFile,
     setTitle,
     setDescription,
+    setTags,
+    setCategory,
+    setVisibility,
     submit,
   };
 }

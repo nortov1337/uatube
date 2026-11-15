@@ -11,6 +11,7 @@ function resolveRoot(): string {
 export class LocalFilePaths {
   readonly root = resolveRoot();
   readonly thumbs = join(this.root, "thumbs");
+  readonly images = join(this.root, "images");
 
   videoFileName(id: string, extension: "mp4" | "webm"): string {
     return this.assertName(`${id}.${extension}`);
@@ -26,6 +27,14 @@ export class LocalFilePaths {
 
   thumbPath(thumbName: string): string {
     return this.assertInside(this.thumbs, join(this.thumbs, this.assertName(thumbName)));
+  }
+
+  imageFileName(kind: "avatar" | "banner", ownerId: string): string {
+    return this.assertName(`${kind}-${ownerId}.jpg`);
+  }
+
+  imagePath(name: string): string {
+    return this.assertInside(this.images, join(this.images, this.assertName(name)));
   }
 
   private assertName(name: string): string {

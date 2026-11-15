@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { RichText } from "@/components/ui/RichText";
 import { formatBytes } from "@/lib/format";
 
 interface VideoDescriptionProps {
@@ -19,13 +20,9 @@ export function VideoDescription({ description, sizeBytes }: VideoDescriptionPro
     <div className="rounded-xl bg-neutral-100 px-3 py-2.5 text-sm">
       <p className="font-medium text-neutral-900">{formatBytes(sizeBytes)} · исходный файл</p>
       {text ? (
-        <p
-          className={`mt-2 whitespace-pre-wrap break-words text-neutral-800 ${
-            collapsible && !expanded ? "line-clamp-3" : ""
-          }`}
-        >
-          {text}
-        </p>
+        <div className={`mt-2 text-neutral-800 ${collapsible && !expanded ? "line-clamp-3" : ""}`}>
+          <RichText text={text} />
+        </div>
       ) : (
         <p className="mt-2 text-neutral-500">Описание не добавлено.</p>
       )}

@@ -6,10 +6,20 @@ import { Textarea } from "@/components/ui/Textarea";
 import { errorMessage } from "@/lib/api-client";
 
 interface CommentFormProps {
-  onSubmit: (body: string) => Promise<void>;
+  onSubmit: (body: string) => Promise<unknown>;
+  placeholder?: string;
+  submitLabel?: string;
+  compact?: boolean;
+  onCancel?: () => void;
 }
 
-export function CommentForm({ onSubmit }: CommentFormProps) {
+export function CommentForm({
+  onSubmit,
+  placeholder = "Оставьте комментарий",
+  submitLabel = "Отправить",
+  compact = false,
+  onCancel,
+}: CommentFormProps) {
   const [body, setBody] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,8 +34,9 @@ export function CommentForm({ onSubmit }: CommentFormProps) {
     try {
       await onSubmit(value);
       setBody("");
-    } catch (submitError) {
-      setError(errorMessage(submitError));
+      onCancel?.();
+    } catch (requestError) {
+      setError(errorMessage(requestError));
     } finally {
       setPending(false);
     }
@@ -36,18 +47,22 @@ export function CommentForm({ onSubmit }: CommentFormProps) {
       <Textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
-        placeholder="Оставьте комментарий"
-        rows={3}
+        placeholder={placeholder}
+        rows={compact ? 2 : 3}
         maxLength={1000}
-        invalid={Boolean(error)}
+        disabled={pending}
       />
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-neutral-500">{body.length}/1000</span>
+      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      <div className="flex items-center gap-2">
         <Button type="submit" size="sm" disabled={pending || body.trim().length === 0}>
-          {pending ? "Отправляем…" : "Отправить"}
+          {pending ? "Отправляем…" : submitLabel}
         </Button>
+        {onCancel ? (
+          <Button variant="ghost" size="sm" onClick={onCancel} disabled={pending}>
+            Отмена
+          </Button>
+        ) : null}
       </div>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </form>
   );
 }

@@ -14,6 +14,8 @@ export class VideoMapper {
       createdAt: video.createdAt.toISOString(),
       author: UserMapper.toPublic(video.author),
       likesCount: video.likesCount,
+      tags: [...video.tags],
+      category: video.category,
     };
   }
 
@@ -24,6 +26,8 @@ export class VideoMapper {
       mimeType: video.mimeType,
       sizeBytes: video.sizeBytes,
       likedByMe,
+      visibility: video.visibility,
+      commentsCount: video.commentsCount,
     };
   }
 }

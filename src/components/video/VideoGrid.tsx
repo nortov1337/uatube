@@ -8,12 +8,14 @@ interface VideoGridProps {
   videos: VideoCardDTO[];
   emptyTitle?: string;
   emptyDescription?: string;
+  emptyAction?: { href: string; label: string } | null;
 }
 
 export function VideoGrid({
   videos,
   emptyTitle = "Пока нет видео",
   emptyDescription = "Загрузите первое видео — оно сразу появится в ленте.",
+  emptyAction = { href: "/upload", label: "Загрузить видео" },
 }: VideoGridProps) {
   if (videos.length === 0) {
     return (
@@ -22,12 +24,14 @@ export function VideoGrid({
         title={emptyTitle}
         description={emptyDescription}
         action={
-          <Link
-            href="/upload"
-            className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
-          >
-            Загрузить видео
-          </Link>
+          emptyAction ? (
+            <Link
+              href={emptyAction.href}
+              className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700"
+            >
+              {emptyAction.label}
+            </Link>
+          ) : null
         }
       />
     );

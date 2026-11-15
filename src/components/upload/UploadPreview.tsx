@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import type { VideoMetadata } from "@/hooks/useVideoMetadata";
 import { formatBytes, formatDuration } from "@/lib/format";
 
@@ -10,17 +10,15 @@ interface UploadPreviewProps {
 }
 
 export function UploadPreview({ file, metadata }: UploadPreviewProps) {
-  const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const posterUrl = useMemo(
+    () => (metadata?.thumbBlob ? URL.createObjectURL(metadata.thumbBlob) : null),
+    [metadata],
+  );
 
   useEffect(() => {
-    if (!metadata?.thumbBlob) {
-      setPosterUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(metadata.thumbBlob);
-    setPosterUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [metadata]);
+    if (!posterUrl) return;
+    return () => URL.revokeObjectURL(posterUrl);
+  }, [posterUrl]);
 
   return (
     <div className="flex gap-3 rounded-2xl border border-neutral-200 p-3">

@@ -6,33 +6,58 @@ import type { Page } from "@/application/dto/Page";
 import { CommentForm } from "@/components/comments/CommentForm";
 import { CommentItem } from "@/components/comments/CommentItem";
 import { CommentSkeleton } from "@/components/comments/CommentSkeleton";
-import { useComments } from "@/hooks/useComments";
+import { useComments, type CommentSortValue } from "@/hooks/useComments";
 
 interface CommentsSectionProps {
   videoId: string;
   initial: Page<CommentDTO>;
+  initialSort: CommentSortValue;
+  totalCount: number;
   currentUserId: string | null;
   videoAuthorId: string;
 }
 
+const SORTS: Array<{ value: CommentSortValue; label: string }> = [
+  { value: "new", label: "Новые" },
+  { value: "top", label: "Популярные" },
+];
+
 export function CommentsSection({
   videoId,
   initial,
+  initialSort,
+  totalCount,
   currentUserId,
   videoAuthorId,
 }: CommentsSectionProps) {
-  const { items, nextCursor, loading, error, loadMore, add, remove } = useComments({
-    videoId,
-    initial,
-  });
+  const comments = useComments({ videoId, initial, initialSort });
+  const count = Math.max(totalCount, comments.items.length);
 
   return (
     <section className="mt-6">
-      <h2 className="text-base font-semibold text-neutral-900">{items.length} комментариев</h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-base font-semibold text-neutral-900">{count} комментариев</h2>
+        <div className="flex items-center gap-1 rounded-full bg-neutral-100 p-1">
+          {SORTS.map((sort) => (
+            <button
+              key={sort.value}
+              type="button"
+              onClick={() => void comments.changeSort(sort.value)}
+              className={`h-7 rounded-full px-2.5 text-xs font-medium ${
+                comments.sort === sort.value
+                  ? "bg-white text-neutral-900 shadow-sm"
+                  : "text-neutral-600"
+              }`}
+            >
+              {sort.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {currentUserId ? (
         <div className="mt-3">
-          <CommentForm onSubmit={add} />
+          <CommentForm onSubmit={(body) => comments.add(body)} />
         </div>
       ) : (
         <p className="mt-3 rounded-xl bg-neutral-100 px-3 py-2.5 text-sm text-neutral-700">
@@ -46,35 +71,77 @@ export function CommentsSection({
         </p>
       )}
 
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {comments.error ? <p className="mt-2 text-sm text-red-600">{comments.error}</p> : null}
 
-      <div className="mt-4 flex flex-col gap-4">
-        {items.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            canDelete={
-              currentUserId !== null &&
-              (comment.author.id === currentUserId || videoAuthorId === currentUserId)
-            }
-            onDelete={remove}
-          />
-        ))}
-        {loading ? <CommentSkeleton /> : null}
+      <div className="mt-4 flex flex-col gap-5">
+        {comments.items.map((comment) => {
+          const loaded = comments.replies[comment.id];
+          return (
+            <div key={comment.id} className="flex flex-col gap-3">
+              <CommentItem
+                comment={comment}
+                currentUserId={currentUserId}
+                videoAuthorId={videoAuthorId}
+                onDelete={comments.remove}
+                onUpdate={comments.update}
+                onToggleLike={comments.toggleLike}
+                onReply={
+                  currentUserId
+                    ? (body) => comments.add(body, comment.id)
+                    : undefined
+                }
+              />
+
+              {loaded && loaded.items.length > 0 ? (
+                <div className="ml-10 flex flex-col gap-4 border-l border-neutral-200 pl-3">
+                  {loaded.items.map((reply) => (
+                    <CommentItem
+                      key={reply.id}
+                      comment={reply}
+                      currentUserId={currentUserId}
+                      videoAuthorId={videoAuthorId}
+                      onDelete={comments.remove}
+                      onUpdate={comments.update}
+                      onToggleLike={comments.toggleLike}
+                    />
+                  ))}
+                  {loaded.nextCursor ? (
+                    <button
+                      type="button"
+                      onClick={() => void comments.loadReplies(comment.id, loaded.nextCursor ?? undefined)}
+                      className="w-fit text-xs font-semibold text-red-600 hover:underline"
+                    >
+                      Показать ещё ответы
+                    </button>
+                  ) : null}
+                </div>
+              ) : comment.repliesCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => void comments.loadReplies(comment.id)}
+                  className="ml-10 w-fit text-xs font-semibold text-red-600 hover:underline"
+                >
+                  Показать ответы ({comment.repliesCount})
+                </button>
+              ) : null}
+            </div>
+          );
+        })}
+        {comments.loading ? <CommentSkeleton /> : null}
       </div>
 
-      {items.length === 0 ? (
+      {comments.items.length === 0 ? (
         <p className="mt-4 text-sm text-neutral-500">Комментариев пока нет.</p>
       ) : null}
 
-      {nextCursor ? (
+      {comments.nextCursor ? (
         <button
           type="button"
-          onClick={loadMore}
-          disabled={loading}
+          onClick={() => void comments.loadMore()}
+          disabled={comments.loading}
           className="mt-4 inline-flex h-10 items-center rounded-full bg-neutral-100 px-4 text-sm font-medium text-neutral-900 hover:bg-neutral-200 disabled:opacity-60"
         >
-          {loading ? "Загружаем…" : "Показать ещё"}
+          {comments.loading ? "Загружаем…" : "Показать ещё"}
         </button>
       ) : null}
     </section>

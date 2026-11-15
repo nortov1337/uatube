@@ -13,7 +13,12 @@ export function VideoCard({ video }: VideoCardProps) {
     <Link href={`/watch/${video.id}`} className="group flex flex-col gap-3">
       <Thumb src={video.thumbUrl} title={video.title} durationSec={video.durationSec} />
       <div className="flex gap-3">
-        <Avatar handle={video.author.handle} name={video.author.name} size="sm" />
+        <Avatar
+          handle={video.author.handle}
+          name={video.author.name}
+          src={video.author.avatarUrl}
+          size="sm"
+        />
         <div className="min-w-0 flex-1">
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-neutral-900 group-hover:text-red-600">
             {video.title}

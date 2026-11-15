@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Upload } from "lucide-react";
+import { Bell, Upload } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
 import { SearchBar } from "@/components/layout/SearchBar";
 import { UserMenu } from "@/components/layout/UserMenu";
@@ -8,6 +8,7 @@ import { container } from "@/lib/container";
 
 export async function Header() {
   const user = await container.auth.currentUser();
+  const unread = user ? await container.notifications.unread(user.id) : 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white">
@@ -27,6 +28,20 @@ export async function Header() {
             <Upload aria-hidden="true" className="h-4 w-4" />
             <span className="hidden sm:inline">Загрузить</span>
           </Link>
+          {user ? (
+            <Link
+              href="/notifications"
+              aria-label="Уведомления"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-700 hover:bg-neutral-100"
+            >
+              <Bell aria-hidden="true" className="h-5 w-5" />
+              {unread > 0 ? (
+                <span className="absolute right-1 top-1 min-w-4 rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-4 text-white">
+                  {unread > 99 ? "99+" : unread}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           {user ? (
             <UserMenu user={user} />
           ) : (

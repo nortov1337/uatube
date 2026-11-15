@@ -4,4 +4,5 @@ import type { VideoEntity } from "@/domain/entities/VideoEntity";
 export interface VideoWithAuthor extends VideoEntity {
   readonly author: UserEntity;
   readonly likesCount: number;
+  readonly commentsCount: number;
 }

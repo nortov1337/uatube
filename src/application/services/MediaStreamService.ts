@@ -1,13 +1,17 @@
 import { NotFoundError } from "@/domain/errors/NotFoundError";
+import type { ImageStorage } from "@/domain/ports/ImageStorage";
 import type { ThumbStorage } from "@/domain/ports/ThumbStorage";
+import type { UserRepository } from "@/domain/ports/UserRepository";
 import type { VideoRepository } from "@/domain/ports/VideoRepository";
 import type { VideoStorage } from "@/domain/ports/VideoStorage";
 import { parseRange } from "@/infrastructure/http/RangeParser";
 
 interface MediaStreamServiceDeps {
   videos: VideoRepository;
+  users: UserRepository;
   storage: VideoStorage;
   thumbs: ThumbStorage;
+  images: ImageStorage;
 }
 
 export interface VideoStream {
@@ -52,6 +56,26 @@ export class MediaStreamService {
     const video = await this.deps.videos.findById(id);
     if (!video || !video.thumbName) return null;
     const data = await this.deps.thumbs.read(video.thumbName);
+    return data ? { data } : null;
+  }
+
+  async openAvatar(handle: string): Promise<{ data: Uint8Array } | null> {
+    return this.openImage(handle, "avatar");
+  }
+
+  async openBanner(handle: string): Promise<{ data: Uint8Array } | null> {
+    return this.openImage(handle, "banner");
+  }
+
+  private async openImage(
+    handle: string,
+    kind: "avatar" | "banner",
+  ): Promise<{ data: Uint8Array } | null> {
+    const user = await this.deps.users.findByHandle(handle);
+    if (!user) return null;
+    const name = kind === "avatar" ? user.avatarName : user.bannerName;
+    if (!name) return null;
+    const data = await this.deps.images.read(name);
     return data ? { data } : null;
   }
 }

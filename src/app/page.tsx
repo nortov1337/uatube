@@ -1,28 +1,88 @@
+import Link from "next/link";
+import { CategoryChips } from "@/components/video/CategoryChips";
+import { ContinueWatching } from "@/components/video/ContinueWatching";
+import { SortTabs } from "@/components/video/SortTabs";
 import { VideoGrid } from "@/components/video/VideoGrid";
 import { container } from "@/lib/container";
+import { currentUserId } from "@/lib/http/currentUserId";
+import { categoryLabel } from "@/domain/values/VideoCategory";
+import { withParams } from "@/lib/url";
 
 export const dynamic = "force-dynamic";
 
 interface HomePageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    tag?: string;
+    category?: string;
+    sort?: string;
+    cursor?: string;
+  }>;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const { q } = await searchParams;
-  const feed = await container.videos.listFeed({ q, limit: 24 });
+  const { q, tag, category, sort, cursor } = await searchParams;
+  const viewerId = await currentUserId();
+  const activeSort = sort ?? "new";
+  const hasFilters = Boolean(q || tag || category) || activeSort !== "new";
+
+  const [feed, continueWatching] = await Promise.all([
+    hasFilters
+      ? container.videos.listFeed({ q, tag, category, sort: activeSort, cursor, limit: 24 })
+      : container.videos.homeFeed(viewerId, 24).then((items) => ({ items, nextCursor: null })),
+    viewerId && !hasFilters
+      ? container.history.continueWatching(viewerId, 8)
+      : Promise.resolve([]),
+  ]);
 
   return (
     <div>
-      {q ? (
-        <h1 className="mb-6 text-lg font-semibold text-neutral-900">Результаты по «{q}»</h1>
-      ) : null}
+      <ContinueWatching items={continueWatching} />
+
+      <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-lg font-semibold text-neutral-900">
+            {q
+              ? `Результаты по «${q}»`
+              : tag
+                ? `Видео с тегом #${tag}`
+                : category
+                  ? categoryLabel(category)
+                  : viewerId
+                    ? "Рекомендации"
+                    : "Главная"}
+          </h1>
+          <SortTabs active={activeSort} q={q} tag={tag} category={category} />
+        </div>
+        <CategoryChips active={category} q={q} tag={tag} />
+      </div>
+
       <VideoGrid
         videos={feed.items}
-        emptyTitle={q ? "Ничего не найдено" : "Пока нет видео"}
+        emptyTitle={q || tag ? "Ничего не найдено" : "Пока нет видео"}
         emptyDescription={
-          q ? "Попробуйте другой запрос." : "Загрузите первое видео — оно сразу появится в ленте."
+          q || tag
+            ? "Попробуйте другой запрос или тег."
+            : "Загрузите первое видео — оно сразу появится в ленте."
         }
       />
+
+      {feed.nextCursor ? (
+        <div className="mt-8 flex justify-center">
+          <Link
+            href={withParams("/", {
+              q,
+              tag,
+              category,
+              sort: activeSort === "new" ? undefined : activeSort,
+              cursor: feed.nextCursor,
+            })}
+            className="inline-flex h-10 items-center rounded-full bg-neutral-100 px-5 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
+          >
+            Показать ещё
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

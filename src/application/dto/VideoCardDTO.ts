@@ -9,4 +9,6 @@ export interface VideoCardDTO {
   createdAt: string;
   author: PublicUserDTO;
   likesCount: number;
+  tags: string[];
+  category: string;
 }

@@ -1,9 +1,9 @@
 import { RateLimitError } from "@/domain/errors/RateLimitError";
-import { UnauthorizedError } from "@/domain/errors/UnauthorizedError";
 import { JsonResponder } from "@/infrastructure/http/JsonResponder";
 import { container } from "@/lib/container";
 import { clientIp } from "@/lib/http/clientIp";
 import { currentUserId } from "@/lib/http/currentUserId";
+import { requireUserId } from "@/lib/http/requireUserId";
 import { withApi } from "@/lib/http/withApi";
 
 type Context = { params: Promise<{ id: string }> };
@@ -15,16 +15,18 @@ export const dynamic = "force-dynamic";
 
 export const GET = withApi<Context>(async (req, ctx) => {
   const { id } = await ctx.params;
-  const page = await container.comments.list(id, Object.fromEntries(req.nextUrl.searchParams));
+  const viewerId = await currentUserId();
+  const page = await container.comments.list(
+    id,
+    Object.fromEntries(req.nextUrl.searchParams),
+    viewerId,
+  );
   return JsonResponder.ok(page);
 });
 
 export const POST = withApi<Context>(async (req, ctx) => {
-  const userId = await currentUserId();
-  if (!userId) throw new UnauthorizedError("Требуется вход");
-
-  const key = `comment:${clientIp(req)}:${userId}`;
-  const limit = container.rateLimiter.consume(key, LIMIT, WINDOW_MS);
+  const userId = await requireUserId();
+  const limit = container.rateLimiter.consume(`comment:${clientIp(req)}:${userId}`, LIMIT, WINDOW_MS);
   if (!limit.allowed) {
     throw new RateLimitError("Слишком много комментариев, попробуйте позже", limit.retryAfterSec);
   }

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const COOKIE_NAME = "session";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   if (req.cookies.get(COOKIE_NAME)?.value) return NextResponse.next();
 
   const loginUrl = new URL("/login", req.url);
@@ -11,5 +11,13 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/upload"],
+  matcher: [
+    "/upload",
+    "/studio/:path*",
+    "/settings/:path*",
+    "/history/:path*",
+    "/subscriptions/:path*",
+    "/notifications/:path*",
+    "/playlists/:path*",
+  ],
 };
