@@ -10,3 +10,7 @@ export function withParams(
   const query = search.toString();
   return query ? `${path}?${query}` : path;
 }
+
+export function loginPath(next: string): string {
+  return withParams("/login", { next });
+}

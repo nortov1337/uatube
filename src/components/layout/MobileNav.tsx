@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/components/i18n/I18nProvider";
-import { NAV_ICONS, type NavItem } from "@/components/layout/SidebarNav";
+import { NAV_ICONS, guestNavHref, type NavItem } from "@/components/layout/SidebarNav";
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -22,11 +22,12 @@ export function MobileNav() {
       {items.map((item) => {
         const Icon = NAV_ICONS[item.icon];
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const href = guestNavHref(item.href, pathname);
 
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={href}
             aria-current={active ? "page" : undefined}
             className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors ${
               active

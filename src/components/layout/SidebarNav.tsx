@@ -13,6 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { loginPath } from "@/lib/url";
 
 export const NAV_ICONS = {
   home: Home,
@@ -26,6 +27,12 @@ export const NAV_ICONS = {
 } satisfies Record<string, LucideIcon>;
 
 export type NavIcon = keyof typeof NAV_ICONS;
+
+const AUTH_REQUIRED_PAGES = new Set(["/subscriptions", "/history", "/playlists", "/studio"]);
+
+export function guestNavHref(href: string, pathname: string): string {
+  return pathname === "/login" && AUTH_REQUIRED_PAGES.has(href) ? loginPath(href) : href;
+}
 
 export interface NavItem {
   href: string;
@@ -41,11 +48,12 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
       {items.map((item) => {
         const Icon = NAV_ICONS[item.icon];
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const href = guestNavHref(item.href, pathname);
 
         return (
           <Link
             key={`${item.href}-${item.label}`}
-            href={item.href}
+            href={href}
             aria-current={active ? "page" : undefined}
             className={`group relative flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${
               active

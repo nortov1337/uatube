@@ -8,6 +8,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { container } from "@/lib/container";
 import { getI18n } from "@/lib/i18n/server";
 import { getPreferences } from "@/lib/preferences-server";
+import { loginPath } from "@/lib/url";
 
 export async function Header() {
   const { t } = await getI18n();
@@ -26,7 +27,7 @@ export async function Header() {
         </div>
         <div className="ml-auto flex items-center gap-2 md:ml-0">
           <Link
-            href="/upload"
+            href={user ? "/upload" : loginPath("/upload")}
             aria-label={t("nav.uploadTitle")}
             className="inline-flex h-10 items-center gap-2 rounded-full bg-neutral-100 px-3 text-sm font-medium text-neutral-900 transition-all hover:bg-neutral-200 active:scale-95"
           >
