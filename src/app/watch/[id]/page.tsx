@@ -116,7 +116,7 @@ export default async function WatchPage({ params, searchParams }: WatchPageProps
         </div>
 
         <div className="mt-3">
-          <VideoDescription description={video.description} sizeBytes={video.sizeBytes} />
+          <VideoDescription description={video.description} />
         </div>
 
         <CommentsSection

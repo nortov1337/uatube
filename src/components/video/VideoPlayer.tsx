@@ -1,10 +1,11 @@
 "use client";
 
-import { PictureInPicture2, Settings2 } from "lucide-react";
+import { Play, RotateCcw, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { requestJson } from "@/lib/api-client";
+import { PlayerControls } from "./PlayerControls";
 
 interface VideoPlayerProps {
   id: string;
@@ -13,13 +14,34 @@ interface VideoPlayerProps {
   nextHref?: string | null;
 }
 
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SEEK_STEP = 5;
+const JUMP_STEP = 10;
+const VOLUME_STEP = 0.1;
+const IDLE_DELAY = 2600;
+const CLICK_DELAY = 220;
+const FLASH_DURATION = 600;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<number | null>(null);
+  const clickTimer = useRef<number | null>(null);
+  const flashTimer = useRef<number | null>(null);
   const router = useRouter();
   const { t } = useI18n();
+
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [buffered, setBuffered] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [flash, setFlash] = useState<{ side: "back" | "forward"; key: number } | null>(null);
 
   useEffect(() => {
     const key = `viewed:${id}`;
@@ -42,94 +64,267 @@ export function VideoPlayer({ id, poster, resumeSec = 0, nextHref = null }: Vide
     return () => window.clearInterval(timer);
   }, [id]);
 
+  useEffect(() => {
+    const onFullscreenChange = () => setFullscreen(document.fullscreenElement === shellRef.current);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (hideTimer.current) window.clearTimeout(hideTimer.current);
+      if (clickTimer.current) window.clearTimeout(clickTimer.current);
+      if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    },
+    [],
+  );
+
+  const wake = useCallback(() => {
+    setControlsVisible(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => {
+      if (!videoRef.current?.paused) setControlsVisible(false);
+    }, IDLE_DELAY);
+  }, []);
+
+  const holdControls = () => {
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    setControlsVisible(true);
+  };
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) void video.play().catch(() => null);
+    else video.pause();
+  };
+
+  const seekTo = (time: number) => {
+    const video = videoRef.current;
+    if (!video || !Number.isFinite(time)) return;
+    const target = clamp(time, 0, video.duration || 0);
+    video.currentTime = target;
+    setCurrent(target);
+  };
+
+  const showFlash = (side: "back" | "forward") => {
+    setFlash({ side, key: Date.now() });
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => setFlash(null), FLASH_DURATION);
+  };
+
+  const skip = (offset: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    seekTo(video.currentTime + offset);
+    showFlash(offset < 0 ? "back" : "forward");
+  };
+
+  const changeVolume = (value: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = false;
+    video.volume = clamp(value, 0, 1);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+  };
+
+  const changeSpeed = (value: number) => {
+    if (videoRef.current) videoRef.current.playbackRate = value;
+    setSpeed(value);
+  };
+
+  const toggleFullscreen = () => {
+    shellRef.current?.focus();
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void shellRef.current?.requestFullscreen().catch(() => null);
+  };
+
+  const togglePictureInPicture = () => {
+    if (document.pictureInPictureElement) void document.exitPictureInPicture();
+    else void videoRef.current?.requestPictureInPicture?.().catch(() => null);
+  };
+
+  const onVideoClick = () => {
+    if (clickTimer.current) {
+      window.clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+      return;
+    }
+    clickTimer.current = window.setTimeout(() => {
+      clickTimer.current = null;
+      togglePlay();
+    }, CLICK_DELAY);
+  };
+
+  const onVideoDoubleClick = () => {
+    if (clickTimer.current) {
+      window.clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    toggleFullscreen();
+  };
+
   const onLoadedMetadata = () => {
     const video = videoRef.current;
-    if (!video || resumeSec < 3) return;
-    if (resumeSec < video.duration - 5) video.currentTime = resumeSec;
+    if (!video) return;
+    setDuration(video.duration || 0);
+    if (resumeSec >= 3 && resumeSec < video.duration - 5) {
+      video.currentTime = resumeSec;
+      setCurrent(resumeSec);
+    }
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const video = videoRef.current;
     if (!video) return;
+    if (/^[0-9]$/.test(event.key) && duration > 0) {
+      event.preventDefault();
+      seekTo((duration * Number(event.key)) / 10);
+      return;
+    }
     switch (event.key) {
       case " ":
       case "k":
         event.preventDefault();
-        void (video.paused ? video.play() : video.pause());
+        togglePlay();
         break;
       case "ArrowLeft":
-        video.currentTime = Math.max(0, video.currentTime - 5);
+        event.preventDefault();
+        skip(-SEEK_STEP);
         break;
       case "ArrowRight":
-        video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
+        event.preventDefault();
+        skip(SEEK_STEP);
         break;
       case "j":
-        video.currentTime = Math.max(0, video.currentTime - 10);
+        skip(-JUMP_STEP);
         break;
       case "l":
-        video.currentTime = Math.min(video.duration || 0, video.currentTime + 10);
+        skip(JUMP_STEP);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        changeVolume(video.volume + VOLUME_STEP);
+        break;
+      case "ArrowDown":
+        event.preventDefault();
+        changeVolume(video.volume - VOLUME_STEP);
         break;
       case "m":
-        video.muted = !video.muted;
+        toggleMute();
         break;
       case "f":
-        void video.requestFullscreen?.();
+        toggleFullscreen();
         break;
       default:
         break;
     }
   };
 
-  const applySpeed = (value: number) => {
-    setSpeed(value);
-    if (videoRef.current) videoRef.current.playbackRate = value;
-  };
-
   return (
     <div
+      ref={shellRef}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="overflow-hidden rounded-2xl bg-black shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+      onPointerMove={wake}
+      onPointerDown={(event) => {
+        if (event.target instanceof HTMLVideoElement) shellRef.current?.focus();
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === "mouse" && playing) setControlsVisible(false);
+      }}
+      className={`relative overflow-hidden bg-black outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${
+        fullscreen ? "h-screen w-screen" : "aspect-video w-full rounded-2xl"
+      } ${controlsVisible ? "" : "cursor-none"}`}
     >
       <video
         ref={videoRef}
-        controls
         playsInline
         preload="metadata"
         poster={poster ?? undefined}
         src={`/api/media/${id}`}
+        onClick={onVideoClick}
+        onDoubleClick={onVideoDoubleClick}
         onLoadedMetadata={onLoadedMetadata}
+        onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)}
+        onDurationChange={(event) => setDuration(event.currentTarget.duration || 0)}
+        onProgress={(event) => {
+          const ranges = event.currentTarget.buffered;
+          if (ranges.length > 0) setBuffered(ranges.end(ranges.length - 1));
+        }}
+        onPlay={() => {
+          setPlaying(true);
+          wake();
+        }}
+        onPause={() => {
+          setPlaying(false);
+          holdControls();
+        }}
+        onVolumeChange={(event) => {
+          setVolume(event.currentTarget.volume);
+          setMuted(event.currentTarget.muted);
+        }}
         onEnded={() => {
+          setPlaying(false);
+          holdControls();
           if (nextHref) router.push(nextHref);
         }}
-        className="aspect-video w-full bg-black"
+        className="h-full w-full bg-black object-contain"
       />
-      <div className="flex items-center gap-2 bg-black px-3 py-2 text-xs text-white/70">
-        <Settings2 aria-hidden="true" className="h-3.5 w-3.5" />
-        <label className="flex items-center gap-1">
-          {t("watch.playbackSpeed")}
-          <select
-            value={speed}
-            onChange={(event) => applySpeed(Number(event.target.value))}
-            className="rounded bg-white/10 px-1 py-0.5 text-xs text-white outline-none transition-colors hover:bg-white/15"
-          >
-            {SPEEDS.map((value) => (
-              <option key={value} value={value} className="bg-neutral-900 text-white">
-                {value}×
-              </option>
-            ))}
-          </select>
-        </label>
+
+      {playing ? null : (
         <button
           type="button"
-          onClick={() => void videoRef.current?.requestPictureInPicture?.().catch(() => null)}
-          className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 transition-colors hover:bg-white/10"
+          aria-label={t("player.play")}
+          onClick={togglePlay}
+          className="absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-[#ff0033]"
         >
-          <PictureInPicture2 aria-hidden="true" className="h-3.5 w-3.5" />
-          PiP
+          <Play className="ml-0.5 h-7 w-7 fill-current" />
         </button>
-        <span className="hidden sm:inline">{t("watch.shortcuts")}</span>
-      </div>
+      )}
+
+      {flash ? (
+        <div
+          key={flash.key}
+          className="pointer-events-none absolute inset-0 animate-fade-in"
+        >
+          <span
+            className={`absolute top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-3.5 text-white ${
+              flash.side === "back" ? "left-[14%]" : "right-[14%]"
+            }`}
+          >
+            {flash.side === "back" ? (
+              <RotateCcw className="h-6 w-6" />
+            ) : (
+              <RotateCw className="h-6 w-6" />
+            )}
+          </span>
+        </div>
+      ) : null}
+
+      <PlayerControls
+        playing={playing}
+        current={current}
+        duration={duration}
+        buffered={buffered}
+        volume={volume}
+        muted={muted}
+        speed={speed}
+        fullscreen={fullscreen}
+        visible={controlsVisible}
+        onTogglePlay={togglePlay}
+        onSeek={seekTo}
+        onVolume={changeVolume}
+        onToggleMute={toggleMute}
+        onSpeed={changeSpeed}
+        onToggleFullscreen={toggleFullscreen}
+        onTogglePiP={togglePictureInPicture}
+      />
     </div>
   );
 }
