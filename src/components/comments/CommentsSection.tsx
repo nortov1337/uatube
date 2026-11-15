@@ -5,6 +5,7 @@ import type { CommentDTO } from "@/application/dto/CommentDTO";
 import type { Page } from "@/application/dto/Page";
 import { CommentForm } from "@/components/comments/CommentForm";
 import { CommentItem } from "@/components/comments/CommentItem";
+import { CommentSkeleton } from "@/components/comments/CommentSkeleton";
 import { useComments } from "@/hooks/useComments";
 
 interface CommentsSectionProps {
@@ -59,6 +60,7 @@ export function CommentsSection({
             onDelete={remove}
           />
         ))}
+        {loading ? <CommentSkeleton /> : null}
       </div>
 
       {items.length === 0 ? (

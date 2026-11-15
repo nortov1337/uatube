@@ -65,12 +65,7 @@ export default async function WatchPage({ params }: WatchPageProps) {
         </div>
 
         <div className="mt-3">
-          <VideoDescription
-            description={video.description}
-            views={video.views}
-            createdAt={video.createdAt}
-            sizeBytes={video.sizeBytes}
-          />
+          <VideoDescription description={video.description} sizeBytes={video.sizeBytes} />
         </div>
 
         <CommentsSection
